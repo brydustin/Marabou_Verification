@@ -1,0 +1,22 @@
+{
+"tableau" : [
+[{"var" : 0, "val" : -1.0}, {"var" : 1, "val" : 1.0}, {"var" : 2, "val" : -1.0}, {"var" : 3, "val" : -1.0}]
+], 
+"upperBounds" : [0.0, 2.0, 3.0, 0.0],
+"lowerBounds" : [-1.0, 1.0, 0.0, 0.0],
+"constraints" : [
+{"constraintType" : 0, "vars" : [0, 1, 2, 3]}
+],
+"proof" : { 
+"children" : [
+{
+"split" : [{"var" : 0, "val" : 0.0, "bound" : "U"}, {"var" : 1, "val" : 0.0, "bound" : "U"}],
+"contradiction" : [ 1 ]
+},
+{
+"split" : [{"var" : 0, "val" : 0.0, "bound" : "L"}, {"var" : 2, "val" : 0.0, "bound" : "U"}],
+"contradiction" : [ {"var" : 0, "val" : -1.0} ]
+}
+]
+}
+}

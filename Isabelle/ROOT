@@ -1,0 +1,37 @@
+session Marabou_Verification = HOL +
+  options [document = false, quick_and_dirty = false]
+  theories
+    Marabou_Syntax
+    Marabou_Semantics
+    Linear_Constraints
+    ReLU_Constraints
+    Query_Semantics
+    ReLU_Splitting
+    Marabou_Examples
+    Rational_Linear_Constraints
+    Rational_Linear_Certificates
+    Rational_Linear_Examples
+    Rational_Linear_Implication
+    ReLU_Bound_Propagation
+    ReLU_Aux_Bound_Propagation
+    Rational_Proof_Trees
+    Rational_Proof_Tree_Examples
+    Rational_Linear_Implication_Examples
+    ReLU_Bound_Examples
+    Imported_Marabou_Linear
+    Imported_Marabou_Relu
+    Imported_Marabou_Nested
+    Imported_Marabou_Propagation
+    Imported_Marabou_Propagation_Positive
+    Imported_Marabou_Propagation_Chain
+    Imported_Marabou_Propagation_Tree
+    Imported_Marabou_Explained_Negative
+    Imported_Marabou_Explained_Positive
+    Imported_Marabou_Solver_Linear
+    Imported_Marabou_Solver_Relu
+    Solver_ReLU_Examples
+    Imported_Marabou_Solver_Relu_Aux
+    Imported_Marabou_Solver_Relu_Aux_Active
+    ReLU_Aux_Bound_Examples
+  export_files (in generated) [2] "*:code/Marabou_Linear_Leaf.ML"
+    "*:code/Marabou_Proof_Checker.ML"

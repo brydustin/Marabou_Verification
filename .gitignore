@@ -1,0 +1,3 @@
+# Regenerate from the checked theory with: isabelle build -e -D Isabelle
+/Isabelle/generated/
+/Isabelle/**/__pycache__/

@@ -1,0 +1,12 @@
+{
+"tableau" : [
+[{"var" : 0, "val" : 1.0}, {"var" : 1, "val" : -1.0}]
+], 
+"upperBounds" : [0.25, 2.0],
+"lowerBounds" : [-2.0, 0.5],
+"constraints" : [
+],
+"proof" : { 
+"contradiction" : [ {"var" : 0, "val" : 0.5} ]
+}
+}

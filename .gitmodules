@@ -1,0 +1,6 @@
+[submodule "upstream/Marabou"]
+	path = upstream/Marabou
+	url = https://github.com/NeuralNetworkVerification/Marabou.git
+[submodule "upstream/ReluplexCav2017"]
+	path = upstream/ReluplexCav2017
+	url = https://github.com/guykatzz/ReluplexCav2017.git

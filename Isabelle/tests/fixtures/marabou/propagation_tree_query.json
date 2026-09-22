@@ -1,0 +1,14 @@
+{
+  "tableau": [
+    [{"var": 0, "val": -1}, {"var": 1, "val": 1},
+     {"var": 2, "val": -1}, {"var": 3, "val": -1}],
+    [{"var": 4, "val": -1}, {"var": 5, "val": 1},
+     {"var": 6, "val": -1}, {"var": 7, "val": -1}]
+  ],
+  "lowerBounds": [-1, 1, 0, 0, -1, 0, 0, 0],
+  "upperBounds": [0, 2, 3, 0, 1, 1, 2, 0],
+  "constraints": [
+    {"constraintType": 0, "vars": [0, 1, 2, 3]},
+    {"constraintType": 0, "vars": [4, 5, 6, 7]}
+  ]
+}
