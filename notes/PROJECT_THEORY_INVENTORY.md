@@ -630,7 +630,7 @@ Results: `imported_source_term_order`, `imported_steps_match_query`, `imported_c
 
 ## Theories added after the audit snapshot
 
-The sections above are the audit-time snapshot of 77 theories. The following 29 theories were added later, in session order; the entries are extracted from their sources in the same format.
+The sections above are the audit-time snapshot of 77 theories. The following 33 theories were added later, in session order; the entries are extracted from their sources in the same format.
 
 ### [Tableau_State](../Isabelle/Tableau_State.thy)
 
@@ -687,6 +687,38 @@ Imports: Tableau_Simplex_Run.
 Objects: `example_rows`, `example_state`, `example_equations`, `example_layout`, `feasible_run`, `infeasible_run`, `zero_pivot_state`, `overstep_state`.
 
 Results: `example_invariant`, `example_represents`, `example_exchange_rows`, `example_exchange_admissible`, `example_exchange_models`, `example_first_choice`, `example_layout_abstracts`, `example_native_pivot`, `example_native_pivot_refines`, `feasible_run_result`, `feasible_run_solution`, `infeasible_run_result`, `example_infeasible`, `zero_pivot_rejected`, `overstep_rejected`.
+
+### [Tableau_Initialization](../Isabelle/Tableau_Initialization.thy)
+
+Imports: Tableau_Simplex_Run.
+
+Objects: `bound_variable`, `lowers`, `uppers`, `lower_of`, `upper_of`, `is_equation`, `constraint_expr`, `constraint_scalar`, `aux_terms`, `aux_scalar`, `engine_ready`, `bounds_consistent`, `initial_rows`, `initial_lower`, `initial_upper`, `initial_tableau`, `initial_basics`, `extend_aux`, `linear_result`, `solve_linear_part`.
+
+Results: `lowers_mem`, `uppers_mem`, `bounds_iff`, `engine_ready_facts`, `query_bounds_iff`, `equation_iff`, `inconsistent_bounds_unsatisfiable`, `initial_tableau_simps`, `aux_range`, `initial_tableau_invariant`, `initial_bounded_models`, `eval_aux_terms_extend`, `query_model_extends`, `bounded_model_satisfies_linear_part`, `initial_empty_unsatisfiable`, `is_simplex_unsat_iff`, `solve_linear_part_unsat`, `solve_linear_part_feasible`, `solve_linear_part_model`, `solve_linear_part_sat`.
+
+### [Tableau_Initial_Basis](../Isabelle/Tableau_Initial_Basis.thy)
+
+Imports: Tableau_Initialization.
+
+Objects: `pivot_sequence`, `reset_assignment`, `lists_match`, `basis_search`, `swap`, `equation_coefficient`, `initial_search`, `densest`, `search_step`, `search_loop`, `select_initial_basis`, `basis_pivots`, `basis_order`, `native_initial_tableau`, `solve_linear_part_native`, `query_width`, `solve_query`.
+
+Results: `pivot_sequence_sound`, `reset_assignment_simps`, `reset_assignment_invariant`, `native_initial_tableau_sound`, `solve_linear_part_native_unsat`, `solve_linear_part_native_feasible`, `solve_linear_part_native_model`, `solve_query_unsat`, `solve_query_model`, `solve_query_sat`.
+
+### [Tableau_Initialization_Examples](../Isabelle/Tableau_Initialization_Examples.thy)
+
+Imports: Tableau_Initial_Basis Imported_Marabou_Initial_Bases Imported_Marabou_Example_Linear_Unsat Imported_Marabou_Example_Relu_Sat.
+
+Objects: `linear_sat_query`, `relu_linear_unsat_query`, `inequality_query`, `unbounded_query`, `crossed_bounds_query`.
+
+Results: `linear_unsat_file_solved`, `linear_unsat_file_unsatisfiable_by_simplex`, `linear_sat_query_solved`, `linear_sat_query_satisfiable`, `relu_linear_unsat_query_unsatisfiable`, `relu_sat_file_relaxation_only`, `relu_split_swapped_basis_rejected`, `solver_boundaries`, `crossed_bounds_query_unsatisfiable`.
+
+### [Imported_Marabou_Initial_Bases](../Isabelle/Imported_Marabou_Initial_Bases.thy)
+
+Imports: Tableau_Initial_Basis Rational_Linear_Constraints.
+
+Objects: `solver_linear_source`, `solver_relu_source`, `solver_relu_aux_source`, `solver_relu_aux_active_source`, `solver_relu_aux_inactive_source`, `solver_relu_split_source`, `solver_relu_intro_source`, `solver_relu_sequence_source`, `solver_relu_chain_source`, `solver_relu_sat_source`, `file_inequality_relu_unsat_source`, `file_inequality_relu_sat_source`, `file_inequality_linear_sat_source`, `file_phase_active_unsat_source`, `file_phase_inactive_unsat_source`, `file_phase_chain_unsat_source`, `file_phase_fixed_sat_source`, `file_preprocess_split_unsat_source`, `file_preprocess_eliminate_unsat_source`, `file_preprocess_mixed_sat_source`.
+
+Results: `solver_linear_native_initial_basis`, `solver_relu_native_initial_basis`, `solver_relu_aux_native_initial_basis`, `solver_relu_aux_active_native_initial_basis`, `solver_relu_aux_inactive_native_initial_basis`, `solver_relu_split_native_initial_basis`, `solver_relu_intro_native_initial_basis`, `solver_relu_sequence_native_initial_basis`, `solver_relu_chain_native_initial_basis`, `solver_relu_sat_native_initial_basis`, `file_inequality_relu_unsat_native_initial_basis`, `file_inequality_relu_sat_native_initial_basis`, `file_inequality_linear_sat_native_initial_basis`, `file_phase_active_unsat_native_initial_basis`, `file_phase_inactive_unsat_native_initial_basis`, `file_phase_chain_unsat_native_initial_basis`, `file_phase_fixed_sat_native_initial_basis`, `file_preprocess_split_unsat_native_initial_basis`, `file_preprocess_eliminate_unsat_native_initial_basis`, `file_preprocess_mixed_sat_native_initial_basis`.
 
 ### [ReLU_Phase_Fixing](../Isabelle/ReLU_Phase_Fixing.thy)
 

@@ -187,6 +187,27 @@ static void introduce_native_relu_aux_sequence( Query &query, const std::string 
     require( bool( out ), "cannot write ReLU introduction sequence" );
 }
 
+// The initial basis Engine::processInputQuery chose, in native index order
+// (Tableau::_basicIndexToVariable and _nonBasicIndexToVariable after
+// initializeTableau). HOL recomputes it from the source query; the record is
+// only compared, never trusted.
+static void snapshot_initial_basis( const TableauState &tableau, unsigned sourceVariables,
+                                    const std::string &path )
+{
+    std::ofstream out( path );
+    require( bool( out ), "cannot open initial basis" );
+    out << "{\n  \"format\": \"marabou-initial-basis-v1\",\n  \"source_variables\": "
+        << sourceVariables << ",\n  \"rows\": " << tableau._m << ",\n  \"basic\": [";
+    for ( unsigned i = 0; i < tableau._m; ++i )
+        out << ( i ? ", " : "" ) << tableau._basicIndexToVariable[i];
+    out << "],\n  \"nonbasic\": [";
+    for ( unsigned i = 0; i < tableau._n - tableau._m; ++i )
+        out << ( i ? ", " : "" ) << tableau._nonBasicIndexToVariable[i];
+    out << "]\n}\n";
+    out.close();
+    require( bool( out ), "cannot write initial basis" );
+}
+
 // Propose one introduction per observed new tableau column. This is a harness
 // proposal, not a native transformation log. The importer and HOL replay must
 // check its complete result against the separately captured processed query.
@@ -929,6 +950,7 @@ int main( int argc, char **argv )
         const auto &tableau = initial._tableauState;
         require( tableau._n == processed.getNumberOfVariables() &&
                  tableau._m == processed.getNumberOfEquations(), "snapshot dimensions differ" );
+        snapshot_initial_basis( tableau, sourceVariables, prefix + "_initial_basis.json" );
         for ( unsigned i = 0; i < tableau._m; ++i )
         {
             require( tableau._b[i] == 0, "nonzero tableau right-hand side" );

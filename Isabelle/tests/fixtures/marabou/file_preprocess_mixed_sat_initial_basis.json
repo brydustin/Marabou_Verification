@@ -1,0 +1,7 @@
+{
+  "format": "marabou-initial-basis-v1",
+  "source_variables": 4,
+  "rows": 3,
+  "basic": [2, 1, 3],
+  "nonbasic": [0, 4, 5, 6]
+}

@@ -136,6 +136,7 @@ The saved files in [tests/fixtures/marabou](../Isabelle/tests/fixtures/marabou) 
 | `solver_linear_run.json` | Captured options, outcomes, dimensions, native counters, and runtime snapshot checks. |
 | `solver_linear.log` | Captured stdout/stderr from the final execution. |
 | `solver_linear_provenance.json` | Pinned revision, compiled-source hashes, compiler command/version, linked-library hashes, binary hash, and artifact hashes. |
+| `solver_linear_initial_basis.json` | Added in milestone 26: the native initial basic and nonbasic index orders from `storeState` before solving; compared in HOL, see [TABLEAU_INITIALIZATION.md](TABLEAU_INITIALIZATION.md). |
 
 The query and certificate agreed byte-for-byte across the capture runs.
 Source/provenance and negative-control tests are included in the importer

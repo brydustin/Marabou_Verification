@@ -2751,3 +2751,95 @@ and numerical recovery are outside them. `simplex_run` results concern the
 rows and bounds of a given well-formed tableau. Connecting its initial
 tableau to a query is the next step. No certificate, capture or generated
 theory changed.
+
+## Twenty-sixth milestone: the starting tableau of a query
+
+Completed on 2026-09-24. See [TABLEAU_INITIALIZATION.md](TABLEAU_INITIALIZATION.md).
+The exact simplex loop of milestone 25 now starts from a query, so its
+results are theorems about the query.
+
+### Work done
+
+* [Tableau_Initialization.thy](../Isabelle/Tableau_Initialization.thy):
+  * `engine_ready` (equations only, finite bounds) and the auxiliary-basis
+    tableau `initial_tableau` (`addAuxiliaryVariables`, nonbasics at their
+    lower bounds, basics computed);
+  * `initial_tableau_invariant` and `initial_bounded_models`;
+  * `query_model_extends` and `bounded_model_satisfies_linear_part`;
+  * the query-level `solve_linear_part_*` theorems. `Simplex_Unsat` proves
+    unsatisfiability, ReLUs included; `Simplex_Feasible` satisfies the
+    linear part and bounds, and is a model once the ReLUs check.
+* [Tableau_Initial_Basis.thy](../Isabelle/Tableau_Initial_Basis.thy):
+  * `select_initial_basis`, an exact copy of
+    `selectInitialVariablesForBasis`;
+  * `pivot_sequence_sound`, `reset_assignment` and
+    `native_initial_tableau_sound`;
+  * `solve_query` with `solve_query_unsat`, `solve_query_model` and
+    `solve_query_sat`;
+  * an `export_code … checking SML` check.
+* Harness: `capture.cpp` writes `_initial_basis.json`
+  (`marabou-initial-basis-v1`), the native basic and nonbasic index orders
+  from `storeState` before solving.
+* [import_initial_basis.py](../Isabelle/tools/import_initial_basis.py)
+  generates [Imported_Marabou_Initial_Bases.thy](../Isabelle/Imported_Marabou_Initial_Bases.thy).
+  For each of the 20 distinct native records, it proves by `code_simp` that
+  the HOL selection reproduces the native orders.
+* [Tableau_Initialization_Examples.thy](../Isabelle/Tableau_Initialization_Examples.thy):
+  * `examples/linear_unsat.mqx` refuted by the HOL simplex from its decoded
+    bytes;
+  * a SAT query;
+  * a ReLU query refuted by its linear part;
+  * a relaxation that is not a model;
+  * refused inputs and crossed bounds;
+  * a swapped basis order refuted.
+* [test_initial_basis.py](../Isabelle/tests/test_initial_basis.py): 5 tests.
+
+During development:
+* The result constructors were renamed `Simplex_*`, because `Linear_Unsat`
+  clashed with the certificate constructor.
+* One clean build failed on the swapped-basis rejection lemma, where `simp`
+  rewrote the fact before using it; the proof now unfolds it.
+
+Results are tested by discriminators, since a feasible result holds a
+function.
+
+### Native reruns
+
+`refresh_native_fixtures.py --tag m26_refresh` exited 0 in 13.5 s. Every
+earlier data artifact was reproduced byte for byte, and the run reports and
+logs did not change. Only the provenance records changed, since they hash
+the modified harness. Twenty new `_initial_basis.json` records were saved.
+The three file runs that reproduce a scenario matched that scenario's
+record, and the preprocessing-refuted run has none.
+
+### Validation
+
+```text
+$ isabelle build -c -e -D Isabelle        (110 theories)
+Finished Marabou_Verification (0:02:51 elapsed time, 0:13:32 cpu time, factor 4.73)
+0:02:56 elapsed time, 0:13:32 cpu time, factor 4.61     exit 0
+
+8 exported SML checker tests passed
+72 exported SML proof-tree tests passed
+11 exported SML assignment tests passed
+16 exported SML inequality auxiliary tests passed      (all exit 0)
+
+$ python3 -m unittest discover -s Isabelle/tests -p 'test_*.py'
+Ran 312 tests in 3.943s
+OK
+```
+
+The `build_log` Error/Warning filter was empty, and no forbidden proof or
+axiom token occurs in any project theory. All 662 local links in 39 Markdown files resolve and `git diff --check` is
+clean. The upstream checkouts are clean at their pinned revisions.
+[PROJECT_THEORY_INVENTORY.md](PROJECT_THEORY_INVENTORY.md) lists the 33
+theories added after the audit snapshot.
+
+### Assurance
+
+`solve_query_unsat` and `solve_query_model` are theorems about the query's
+real semantics. They rely on the HOL kernel only, not on Marabou, a
+certificate or the harness. The native basis records support a
+correspondence claim: the HOL selection matches Marabou's on these 20 runs.
+They play no part in soundness. ReLUs are relaxed, not split. Inequalities
+must be converted first, and termination is not proved.

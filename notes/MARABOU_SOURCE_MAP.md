@@ -102,6 +102,35 @@ function. It covers the Harris test, pivots, bound flips and the index
 arrays exactly. It does not model the entry strategies, the retry search,
 refactorization or `MalformedBasisException`.
 
+## Initialization details that affect the model
+
+Inspected for [TABLEAU_INITIALIZATION.md](TABLEAU_INITIALIZATION.md); all in
+`src/engine/Engine.cpp` unless noted.
+
+* On the native LP path, `processInputQuery` (1414–1598) runs these steps in
+  order:
+  * `createConstraintMatrix`;
+  * `removeRedundantEquations`;
+  * `selectInitialVariablesForBasis` on the matrix *before* auxiliaries;
+  * `addAuxiliaryVariables`;
+  * `augmentInitialBasisIfNeeded`;
+  * `initializeTableau`.
+* `createConstraintMatrix` (1061–1089) throws on non-`EQ` rows. It assigns
+  each addend's coefficient, so a repeated variable keeps the last one.
+* `selectInitialVariablesForBasis` (1115–1288) returns only auxiliaries when
+  `ONLY_AUX_INITIAL_BASIS` holds, which it does not by default
+  (GlobalConfiguration.cpp 98). Otherwise it builds a lower-triangular block
+  of original columns: it diagonalizes singleton rows and else excludes the
+  densest column. It uses `FloatUtils::isZero` for nonzero tests.
+* `Tableau::initializeTableau` (Tableau.cpp 336–374) numbers the basics in
+  the given order and the nonbasics in increasing variable order. It sets
+  every nonbasic to its lower bound, then `computeAssignment` (376–411)
+  solves for the basics.
+* `PL_CONSTRAINTS_ADD_AUX_EQUATIONS_AFTER_PREPROCESSING` is true
+  (GlobalConfiguration.cpp 80). In every captured run the ReLU auxiliaries
+  exist before that call, introduced by the harness or by native
+  preprocessing, so it adds no rows; `snapshot_steps` checks the row count.
+
 ## Existing proof evidence is not exact checking
 
 `Checker::checkContradiction` uses `double` row combinations and

@@ -1,13 +1,13 @@
 {
   "assignment_importer_sha256": "98fd33945d4ebde93241a0d7b7595c5519728379d2fd4dbefbd870a4743ee2e3",
   "assurance": "Provenance only; the generated theorem concerns decode_query of the exact bytes of query.mqx. Isabelle checks any local inequality preparation, any native preprocessing (introductions, re-derived bounds and projection) and any ReLU phase fixed before solving, and matches the resulting constraints to the captured query. Python preparation, C++ reading and execution, extraction, and JSON decoding are not verified.",
-  "binary_sha256": "3ffa947b4691299ac64eda6ddfa232efd9b4bd401c12258193c6a914bd7f1a42",
+  "binary_sha256": "0cfaf33a62677c076a4816d0424d0045e8741eb90b3c5ad10061469a61d489e8",
   "capture_compile_command": "/usr/bin/c++ -DBOOST_NO_CXX98_FUNCTION_BASE -I\"/home/dusty/Desktop/Marabou Verification/upstream/Marabou/src/common\" -I\"/home/dusty/Desktop/Marabou Verification/upstream/Marabou/src/configuration\" -I\"/home/dusty/Desktop/Marabou Verification/upstream/Marabou/src/engine\" -I\"/home/dusty/Desktop/Marabou Verification/upstream/Marabou/src/basis_factorization\" -I\"/home/dusty/Desktop/Marabou Verification/upstream/Marabou/src/proofs\" -I\"/home/dusty/Desktop/Marabou Verification/upstream/Marabou/src/nlr\" -I\"/home/dusty/Desktop/Marabou Verification/upstream/Marabou/deps/CVC4\" -I\"/home/dusty/Desktop/Marabou Verification/upstream/Marabou/deps/CVC4/include\" -I\"/home/dusty/Desktop/Marabou Verification/upstream/Marabou/tools/cxxtest\" -O3 -DNDEBUG -std=gnu++17 -O1 -ffunction-sections -fdata-sections -o CMakeFiles/marabou_solver_capture.dir/capture.cpp.o -c \"/home/dusty/Desktop/Marabou Verification/Isabelle/tools/solver_capture/capture.cpp\"",
   "capture_script_sha256": "5db47929091f610365d33a36d69e1d0543ec90dcbf72c948447cbf2a8ed1fa84",
   "cmake_sha256": "4066a000197204b94ac6434212a6d2e6c238bbe87e9103d9e44596e62daacc8a",
   "cmake_version": "cmake version 3.28.3",
   "compiled_sources": {
-    "Isabelle/tools/solver_capture/capture.cpp": "fb06322dcc73b2839945effedd7642216e4499db65d89cb0b64e383c1d035f4d",
+    "Isabelle/tools/solver_capture/capture.cpp": "704415be15999674df8547e87438b6365ea72d6dd29de3344a3a2f19e90f7510",
     "upstream/Marabou/deps/CVC4/base/check.cpp": "67aad610256512c2b7345de798df0b815a632866c11a79d60b63e27d74e724e5",
     "upstream/Marabou/deps/CVC4/base/exception.cpp": "dfc32b9954b98621cdde39ac456a8e4dab5a1d8008c5ae3cb41f85fd75529692",
     "upstream/Marabou/deps/CVC4/base/output.cpp": "8a5ac0df7537b316fa20b785fc98b07c99c8f004cce23e57c397bc97afce531e",

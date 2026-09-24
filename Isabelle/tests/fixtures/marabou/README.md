@@ -293,6 +293,15 @@ start. See [NATIVE_PREPROCESSING.md](../../../../notes/NATIVE_PREPROCESSING.md).
 The generated `Imported_Marabou_Preprocessed_*` and
 `Imported_Marabou_Example_Preprocess_*` theories are in the main session.
 
+Every run that initializes a tableau also has an `_initial_basis.json` record
+(`marabou-initial-basis-v1`). It holds the basic and nonbasic index orders
+that `Engine::processInputQuery` chose, read from the tableau state before
+solving. File examples that reproduce a scenario share that scenario's
+record. [import_initial_basis.py](../../../tools/import_initial_basis.py)
+turns the 20 distinct records into `Imported_Marabou_Initial_Bases`. There
+HOL recomputes each basis from the run's source query and must match it
+exactly; see [TABLEAU_INITIALIZATION.md](../../../../notes/TABLEAU_INITIALIZATION.md).
+
 To refresh every native capture after a tool change, run from the project
 root with a new tag:
 

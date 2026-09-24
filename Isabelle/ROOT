@@ -14,6 +14,10 @@ session Marabou_Verification = HOL +
     Tableau_Index_Layout
     Tableau_Simplex_Run
     Tableau_Pivot_Examples
+    Tableau_Initialization
+    Tableau_Initial_Basis
+    Tableau_Initialization_Examples
+    Imported_Marabou_Initial_Bases
     Inequality_Auxiliary
     ReLU_Splitting
     Marabou_Examples

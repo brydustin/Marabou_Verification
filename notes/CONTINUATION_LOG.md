@@ -398,3 +398,24 @@ equations with the scalar-fixed auxiliaries as basis. Prove
 query-level results. Then the audit's milestone 3, bound application and
 local conflicts. At the user's request, the milestone-25 work was then
 committed and pushed as its own commit.
+
+2026-09-24. The user chose initialization next: build the starting tableau
+from a query so that the loop's results are statements about the query.
+
+Milestone 26 complete:
+* new theories `Tableau_Initialization`, `Tableau_Initial_Basis`,
+  `Tableau_Initialization_Examples` and the generated
+  `Imported_Marabou_Initial_Bases`;
+* the harness records the native initial basis (`_initial_basis.json`);
+* `import_initial_basis.py`;
+* `test_initial_basis.py`.
+
+Rerun `m26_refresh`: all earlier data identical, and 20 new records. HOL
+reproduces the native basis on all 20. `examples/linear_unsat.mqx` is
+refuted by the HOL simplex alone. See
+[TABLEAU_INITIALIZATION.md](TABLEAU_INITIALIZATION.md).
+
+Next (per the audit): bound application and local conflicts, then native
+auxiliary-form ReLU splits and one search frame. The HOL solver could then
+refute queries that need case splits. At the user's request, milestone 26
+was then committed and pushed as its own commit.
