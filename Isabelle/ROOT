@@ -9,6 +9,11 @@ session Marabou_Verification = HOL +
     Tableau_Auxiliary
     Tableau_State
     Tableau_Assignment_Update
+    Tableau_Pivot
+    Tableau_Simplex_Step
+    Tableau_Index_Layout
+    Tableau_Simplex_Run
+    Tableau_Pivot_Examples
     Inequality_Auxiliary
     ReLU_Splitting
     Marabou_Examples

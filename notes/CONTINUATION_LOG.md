@@ -372,3 +372,29 @@ State: all three requested scope expansions are implemented and validated.
 Nothing is staged or committed. The audit's solver-calculus roadmap (next:
 a basis-exchange pivot) is unchanged and is the natural next direction if
 the user wants to continue.
+
+2026-09-24. The user asked to commit and push, then to focus on the tableau
+pivot. All prior work was committed as `0cd0dc4` and pushed to
+`origin/main`. The commit message names the earlier agent sessions whose
+uncommitted work it includes.
+
+Milestone 25 (tableau pivots) complete. New theories: `Tableau_Pivot`,
+`Tableau_Simplex_Step`, `Tableau_Index_Layout`, `Tableau_Simplex_Run`,
+`Tableau_Pivot_Examples`. They cover:
+* the exact exchange;
+* the zero-tolerance Harris ratio test with admissibility and invariants;
+* the simplex failure theorem;
+* the native array refinement;
+* a fuelled loop with sound `Feasible` and `Infeasible` results;
+* worked runs.
+
+Pure HOL; no tool or fixture changed. Clean build (106 theories) exit 0;
+307 Python tests OK; SML smoke tests unchanged and passing; links and diff
+clean. See [TABLEAU_PIVOT.md](TABLEAU_PIVOT.md).
+
+Next (recommended): initialization. Build the initial tableau from a query's
+equations with the scalar-fixed auxiliaries as basis. Prove
+`tableau_represents` and the invariant, so that `simplex_run` gives
+query-level results. Then the audit's milestone 3, bound application and
+local conflicts. At the user's request, the milestone-25 work was then
+committed and pushed as its own commit.

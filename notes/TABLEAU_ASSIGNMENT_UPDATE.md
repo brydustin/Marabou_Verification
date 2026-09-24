@@ -31,10 +31,8 @@ Basic values can cross their bounds after the update; the native simplex
 loop subsequently handles such violated basics. Only the selected nonbasic's
 in-bound update is covered by the bound theorem.
 
-The next small target is a genuine tableau pivot. It should extend the state
-with a basis/row transformation and prove that pivoting preserves the same
-represented linear solution set while changing which variable is basic. The
-source operation to audit next is `Tableau::pivot` in `Tableau.cpp` (around
-line 2130), together with the adjacent `Tableau::update` and the call sites
-that select entering and leaving variables. That will connect a row-state
-calculus to a central simplex transition rather than only candidate updates.
+The pivot has since been formalized (milestone 25, [TABLEAU_PIVOT.md](TABLEAU_PIVOT.md)).
+The native operations are `Tableau::performPivot` (`Tableau.cpp:696`),
+`Tableau::performDegeneratePivot` (803) and `Tableau::updateAssignmentForPivot`
+(2345). A `pivot` near line 2130 exists only in the historical
+`ReluplexCav2017/reluplex/Reluplex.h`, not in `Tableau.cpp`.

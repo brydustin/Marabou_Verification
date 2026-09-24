@@ -119,6 +119,10 @@ interfaces, execution instructions, and assurance boundary.
 | [Query_Semantics.thy](Isabelle/Query_Semantics.thy) | `satisfies_query`, `models`, `satisfiable`, `unsatisfiable`, and a contradictory-bounds rule. |
 | [Tableau_Auxiliary.thy](Isabelle/Tableau_Auxiliary.thy) | Query variable support, one scalar-fixed auxiliary step, model extension/projection, and SAT/UNSAT equivalence under freshness. |
 | [Tableau_State.thy](Isabelle/Tableau_State.thy), [Tableau_Assignment_Update.thy](Isabelle/Tableau_Assignment_Update.thy) | Exact solved-row tableau state; a nonbasic assignment update preserves row consistency, state well-formedness, and the selected nonbasic's bounds when its target is in bounds. This abstracts `Tableau::setNonBasicAssignment(..., true)`; it does not verify C++ factorization, floating point, status updates, or cache invalidation. |
+| [Tableau_Pivot.thy](Isabelle/Tableau_Pivot.thy) | Exact basis exchange (`performPivot`/`performDegeneratePivot`): the same real solutions, candidate valuation and row consistency; the reverse pivot; uniqueness of the solved form of a basis; pivot-then-set for the ReLU repair path. |
+| [Tableau_Simplex_Step.thy](Isabelle/Tableau_Simplex_Step.thy) | Zero-tolerance statuses, core costs, reduced costs, entry eligibility and the default Harris ratio test; admissible steps keep all nonbasics in bounds and every basic's status; no eligible entering variable with an out-of-bounds basic proves the rows and bounds unsatisfiable. |
+| [Tableau_Index_Layout.thy](Isabelle/Tableau_Index_Layout.thy) | Native index maps and value arrays; the array updates of degenerate pivots, real pivots and bound flips refine the exact state transitions. |
+| [Tableau_Simplex_Run.thy](Isabelle/Tableau_Simplex_Run.thy), [Tableau_Pivot_Examples.thy](Isabelle/Tableau_Pivot_Examples.thy) | A fuelled exact simplex loop whose `Feasible` and `Infeasible` results are proved sound (`Out_Of_Fuel` claims nothing); a four-step feasible run, an infeasibility theorem from a run, native array steps and rejections. |
 | [Rational_Tableau_Auxiliary.thy](Isabelle/Rational_Tableau_Auxiliary.thy) | Executable index/equality/freshness checks, a proved embedding into the real transformation, and `check_after_fixed_aux_sound`. |
 | [Tableau_Auxiliary_Examples.thy](Isabelle/Tableau_Auxiliary_Examples.thy) | Exact connection to the earlier linear solver snapshot, a source-query UNSAT theorem, affine examples, and rejection of unsound variable reuse. |
 | [Tableau_Auxiliary_Sequence.thy](Isabelle/Tableau_Auxiliary_Sequence.thy) | Finite checked introductions, concatenation/failure laws, SAT/UNSAT preservation, and `check_after_fixed_aux_sequence_sound`. |
@@ -480,8 +484,15 @@ and 107 exported SML checks passing.
 capture mode, the projection theory and its examples, an exact
 re-derivation importer and four example files. Their results: two UNSAT with
 native proofs after preprocessing, one refuted inside preprocessing, and one
-SAT. The session has 101 theories; 307 Python tests and 107 exported SML
-checks pass.
+SAT. That milestone had 101 theories; 307 Python tests and 107 exported SML
+checks passed.
+
+[Tableau pivots](notes/TABLEAU_PIVOT.md) continue the solver calculus: the
+exact basis exchange, the exact form of Marabou's default ratio test,
+moving pivots and bound flips, the native index arrays, and the soundness of
+the simplex failure branch. A fuelled exact loop has proved `Feasible` and
+`Infeasible` results. The session has 106 theories; 307 Python tests and 107
+exported SML checks pass.
 
 ## Connection to source and remaining scope
 
@@ -519,6 +530,7 @@ open questions are recorded in:
 * [NATIVE_PREPROCESSING.md](notes/NATIVE_PREPROCESSING.md): the `--preprocess` mode, checked facts and projection, re-derived infeasibility, examples and limits.
 * [RELU_PHASE_FIXING.md](notes/RELU_PHASE_FIXING.md): ReLU phases fixed by the initial bounds, the checked `Relu_Fix_*` steps, the harness record and four native examples.
 * [TABLEAU_ASSIGNMENT_UPDATE.md](notes/TABLEAU_ASSIGNMENT_UPDATE.md): the first exact tableau-state transition, corresponding to `Tableau::setNonBasicAssignment(..., true)`.
+* [TABLEAU_PIVOT.md](notes/TABLEAU_PIVOT.md): exact pivots, the zero-tolerance Harris ratio test, native index arrays, the simplex failure theorem and a fuelled sound loop.
 * [CONTINUATION_LOG.md](notes/CONTINUATION_LOG.md): the persistent per-invocation working record.
 * [ACTIVATION_REUSE.md](notes/ACTIVATION_REUSE.md): UAT's existing polymorphic `Sigmoid_Definition.sigmoid`, recorded for future real sigmoid semantics without duplicating its definition.
 * [RELUPLEX_MARABOU_LINEAGE.md](notes/RELUPLEX_MARABOU_LINEAGE.md): historical comparison, with Marabou as the verification target.
@@ -533,8 +545,10 @@ exactly, but reconstruction from native doubles is an untrusted step.
 The model does not
 establish the correctness of the preprocessing procedure (the results of
 `--preprocess` runs are checked instead),
-tableau construction, simplex, pivoting, floating-point comparisons, search
-termination, or C++ state updates. In particular, it does not prove that any
+tableau construction, the C++ simplex and pivot code, floating-point
+comparisons, search termination, or C++ state updates. Pivots and simplex
+steps are modeled only as exact abstractions
+([TABLEAU_PIVOT.md](notes/TABLEAU_PIVOT.md)). In particular, it does not prove that any
 actual Marabou call satisfies the hypotheses of our split rule.
 
 Network file parsing, ONNX/TensorFlow, other activations, DeepPoly, DeepSoI,
@@ -549,12 +563,14 @@ The three checker extensions requested after milestone 20 are complete:
 preprocessing. What remains outside the checked pipeline is described in
 [NATIVE_PREPROCESSING.md](notes/NATIVE_PREPROCESSING.md#assurance-and-limits).
 
-The first solver-calculus transition is now formalized: changing one nonbasic
-tableau value and adjusting the basics preserves the exact solved rows. The
-next target is a basis-changing tableau pivot, with a theorem that the pivot
-preserves the represented linear solution set. This is still an abstract
-real-arithmetic model; the matrix-factorization and floating-point C++ steps
-remain outside the theorem. The certificate checker and native captures
-remain useful secondary artifacts. See
-[the tableau update note](notes/TABLEAU_ASSIGNMENT_UPDATE.md) and
-[the project-direction audit](notes/PROJECT_DIRECTION_AUDIT.md).
+The solver calculus now covers the nonbasic update, the basis exchange,
+the exact simplex step and a fuelled loop whose `Feasible` and `Infeasible`
+results are sound for the tableau's rows and bounds
+([TABLEAU_PIVOT.md](notes/TABLEAU_PIVOT.md)). The loop starts from a given
+well-formed tableau. The next target is initialization: build the initial
+tableau from a query's equations, with the native scalar-fixed auxiliaries as
+the initial basis, and prove that it represents the query's linear part. The
+loop's results then become statements about the query itself. After that
+comes the audit's bound-application and local-conflict milestone. These
+remain exact real-arithmetic models; factorization and floating point stay
+outside the theorems. See [the project-direction audit](notes/PROJECT_DIRECTION_AUDIT.md).

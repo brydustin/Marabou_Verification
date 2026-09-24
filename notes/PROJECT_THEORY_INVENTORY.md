@@ -630,7 +630,7 @@ Results: `imported_source_term_order`, `imported_steps_match_query`, `imported_c
 
 ## Theories added after the audit snapshot
 
-The sections above are the audit-time snapshot of 77 theories. The following 24 theories were added later, in session order; the entries are extracted from their sources in the same format.
+The sections above are the audit-time snapshot of 77 theories. The following 29 theories were added later, in session order; the entries are extracted from their sources in the same format.
 
 ### [Tableau_State](../Isabelle/Tableau_State.thy)
 
@@ -647,6 +647,46 @@ Imports: Tableau_State.
 Objects: `linexpr_coefficient`, `update_nonbasic_assignment`.
 
 Results: `eval_terms_update`, `eval_linexpr_update`, `update_nonbasic_preserves_rows`, `update_nonbasic_preserves_well_formed`, `update_nonbasic_preserves_bounds`, `update_nonbasic_candidate_satisfies_rows`.
+
+### [Tableau_Pivot](../Isabelle/Tableau_Pivot.thy)
+
+Imports: Tableau_Assignment_Update.
+
+Objects: `row_terms`, `row_const`, `row_coefficient`, `drop_var`, `scale_terms`, `solve_row`, `substitute_row`, `exchange_rows`, `exchange_basis`, `pivot_admissible`, `tableau_rows_supported`, `tableau_represents`, `tableau_bounded_models`, `pivot_and_set`.
+
+Results: `eval_linexpr_parts`, `linexpr_vars_parts`, `eval_terms_drop_var`, `eval_terms_scale_terms`, `coefficient_drop_var_same`, `coefficient_drop_var_other`, `coefficient_scale_terms`, `coefficient_append`, `coefficient_absent`, `vars_drop_var`, `vars_scale_terms`, `eval_row_split`, `eval_solve_row`, `solve_row_iff`, `eval_substitute_row`, `vars_solve_row`, `vars_substitute_row`, `coefficient_solve_row_leaving`, `well_formed_rows_supported`, `exchange_basis_simps`, `pivot_admissible_facts`, `exchange_carrier`, `exchange_models`, `exchange_rows_supported`, `exchange_well_formed`, `exchange_candidate`, `exchange_nonbasic_bounds`, `candidate_row_eval`, `rows_satisfied_iff_candidate`, `exchange_rows_satisfied`, `exchange_pivot_element`, `exchange_back_admissible`, `solved_rows_unique`, `exchange_back_rows`, `exchange_represents`, `basis_determines_rows`, `exchange_bounded_models`, `pivot_and_set_sound`.
+
+### [Tableau_Simplex_Step](../Isabelle/Tableau_Simplex_Step.thy)
+
+Imports: Tableau_Pivot.
+
+Objects: `basic_status`, `status_of`, `core_cost`, `reduced_cost`, `direction`, `direction_sign`, `entering_direction`, `entering_range`, `step_rate`, `basic_limit`, `basic_ratio`, `status_kept`, `min_ratio`, `pick_leaving`, `ratio_choice`, `exact_harris_ratio_test`, `move_entering`, `apply_choice`, `step_within_ratios`, `choice_admissible`, `tableau_bounds_ordered`, `native_leaving_target`.
+
+Results: `direction_sign_square`, `direction_sign_nonzero`, `basic_ratio_rate`, `basic_ratio_coefficient`, `status_of_iff`, `basic_limit_sign`, `basic_ratio_nonneg`, `basic_ratio_step`, `basic_ratio_reaches_limit`, `status_kept_limit`, `min_ratio_none`, `min_ratio_le`, `min_ratio_attained`, `pick_leaving_from`, `pick_leaving_keeps`, `pick_leaving_finds`, `exact_harris_admissible`, `update_nonbasic_simps`, `update_coefficient_is_row_coefficient`, `move_entering_values`, `move_entering_simps`, `move_entering_models`, `move_entering_rows_satisfied`, `entering_within_bounds`, `limit_is_native_target`, `leaving_native_formulas`, `choice_invariants`, `eval_terms_as_sum`, `eval_linexpr_difference`, `no_entering_candidate_infeasible`, `all_between_candidate_feasible`.
+
+### [Tableau_Index_Layout](../Isabelle/Tableau_Index_Layout.thy)
+
+Imports: Tableau_Simplex_Step.
+
+Objects: `tableau_layout`, `position`, `layout_valid`, `variable_to_index`, `layout_abstracts`, `change_column`, `swap_indices`, `native_degenerate_pivot`, `native_pivot`, `native_bound_flip`.
+
+Results: `position_less`, `nth_position`, `position_nth`, `layout_swap_valid`, `variable_to_index_after_swap`, `exchange_values`, `layout_abstracts_facts`, `native_degenerate_pivot_refines`, `move_values_general`, `native_pivot_refines`, `native_bound_flip_refines`, `native_simplex_pivot_refines`.
+
+### [Tableau_Simplex_Run](../Isabelle/Tableau_Simplex_Run.thy)
+
+Imports: Tableau_Index_Layout.
+
+Objects: `simplex_outcome`, `first_eligible`, `all_between`, `simplex_run`, `simplex_invariant`.
+
+Results: `first_eligible_some`, `first_eligible_none`, `entering_direction_range`, `all_between_iff`, `update_position`, `simplex_step_invariant`, `simplex_run_sound_all`, `simplex_run_sound`, `simplex_run_represented`.
+
+### [Tableau_Pivot_Examples](../Isabelle/Tableau_Pivot_Examples.thy)
+
+Imports: Tableau_Simplex_Run.
+
+Objects: `example_rows`, `example_state`, `example_equations`, `example_layout`, `feasible_run`, `infeasible_run`, `zero_pivot_state`, `overstep_state`.
+
+Results: `example_invariant`, `example_represents`, `example_exchange_rows`, `example_exchange_admissible`, `example_exchange_models`, `example_first_choice`, `example_layout_abstracts`, `example_native_pivot`, `example_native_pivot_refines`, `feasible_run_result`, `feasible_run_solution`, `infeasible_run_result`, `example_infeasible`, `zero_pivot_rejected`, `overstep_rejected`.
 
 ### [ReLU_Phase_Fixing](../Isabelle/ReLU_Phase_Fixing.thy)
 

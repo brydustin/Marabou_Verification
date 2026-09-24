@@ -68,6 +68,40 @@ bound, and remove the selected ReLU atom. This is a mathematical replacement
 rule, not a proof that `Engine::applySplit` maintains these C++ invariants.
 Both branches include the zero input; no exclusive partition is claimed.
 
+## Pivot and simplex-step details that affect the model
+
+Inspected for [TABLEAU_PIVOT.md](TABLEAU_PIVOT.md); all in `src/engine/`.
+
+* `Engine::performSimplexStep` (Engine.cpp 632–831) asks the active entry
+  strategy for candidates, computes the change column `d = B⁻¹A_e`, and picks
+  a leaving variable. It retries other candidates while the pivot magnitude
+  is below `ACCEPTABLE_SIMPLEX_PIVOT_THRESHOLD`. It throws
+  `InfeasibleQueryException` only when no candidate exists with a fresh cost
+  function and an accurate assignment (776–786).
+* `pickLeavingVariable` uses `harrisRatioTest` (Tableau.cpp 1057–1440),
+  since `USE_HARRIS_RATIO_TEST` is `true` (GlobalConfiguration.cpp 71).
+  Pass 1 finds the minimal ratio against bounds relaxed by a tolerance. Pass
+  2 picks the largest pivot among basics within it. The entering variable's
+  range wins ties, giving a bound flip. `standardRatioTest` breaks the same
+  tie in favour of a basic.
+* Basic bounds in the ratio test depend on `basicCost`: an out-of-bounds
+  basic is limited by its violated bound or is unconstrained. Negative
+  ratios are clamped to zero when costs are stale.
+* `performPivot` (696–801) checks the pivot row against the pivot column
+  (765–769). `updateAssignmentForPivot` (2345–2457) writes the entering
+  variable's new value into the leaving slot. It sets the leaving variable
+  to a bound chosen from its status and direction (2413–2433). Only then are
+  the index maps swapped (779–782). `performDegeneratePivot` (803–850) swaps
+  the maps (828–831) and then the two array entries (839–841); its values
+  do not change.
+* `Engine::fixViolatedPlConstraintIfPossible` (833–924) uses the degenerate
+  pivot to make a basic variable nonbasic before setting its value.
+
+The HOL model sets every tolerance to zero and uses a fresh core cost
+function. It covers the Harris test, pivots, bound flips and the index
+arrays exactly. It does not model the entry strategies, the retry search,
+refactorization or `MalformedBasisException`.
+
 ## Existing proof evidence is not exact checking
 
 `Checker::checkContradiction` uses `double` row combinations and

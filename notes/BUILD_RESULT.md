@@ -2672,3 +2672,82 @@ the native proof. Alternatively, it says that the run's infeasibility was
 re-derived exactly. Results that depend on native tolerances are rejected.
 Long derivations beyond the bounded search, network-level reasoning, and
 removed redundant equations are unsupported.
+
+## Twenty-fifth milestone: exact tableau pivots and a sound simplex loop
+
+Completed on 2026-09-24. See [TABLEAU_PIVOT.md](TABLEAU_PIVOT.md). This is
+milestone 2 of the audit's solver-calculus roadmap. It is extended to moving
+pivots, the default ratio test, the native index arrays and the simplex
+failure branch. It is pure HOL work: no harness, importer or fixture
+changed, and no native rerun was needed.
+
+### Work done
+
+* [Tableau_Pivot.thy](../Isabelle/Tableau_Pivot.thy): the exact basis exchange
+  (`exchange_basis`, pivot element `≠ 0`). Proved:
+  * the solutions, the candidate valuation, row consistency and
+    well-formedness are preserved;
+  * the reverse pivot is admissible and restores the rows;
+  * `solved_rows_unique`: a basis determines its solved rows up to value;
+  * `pivot_and_set_sound` for the ReLU repair path.
+* [Tableau_Simplex_Step.thy](../Isabelle/Tableau_Simplex_Step.thy):
+  zero-tolerance statuses, core and reduced costs, entry eligibility, exact
+  ratios and `exact_harris_ratio_test`, which mirrors native pass 1, the
+  bound-flip tie rule and pass 2 in index order. Proved:
+  * `exact_harris_admissible`, `choice_invariants` and
+    `leaving_native_formulas`;
+  * `no_entering_candidate_infeasible`: no eligible entering variable with a
+    basic out of bounds means the rows and bounds have no real solution;
+  * `all_between_candidate_feasible`.
+* [Tableau_Index_Layout.thy](../Isabelle/Tableau_Index_Layout.thy): the native
+  index maps and value arrays. The degenerate-pivot, real-pivot and
+  bound-flip array updates refine the exact transitions, and
+  `_variableToIndex` behaves as the native code sets it.
+* [Tableau_Simplex_Run.thy](../Isabelle/Tableau_Simplex_Run.thy): a fuelled
+  loop with `simplex_run_sound` and `simplex_run_represented`, plus an
+  `export_code … checking SML` check.
+* [Tableau_Pivot_Examples.thy](../Isabelle/Tableau_Pivot_Examples.thy), all by
+  `code_simp`:
+  * explicit exchanged rows, including a kept duplicate term;
+  * the native array state after a Harris pivot;
+  * a four-step `Feasible` run to the unique solution;
+  * an `Infeasible` run turned into `example_infeasible`;
+  * rejections of a zero pivot element and of a step past the minimal ratio.
+
+During development, the stale "next target" paragraph of
+[TABLEAU_ASSIGNMENT_UPDATE.md](TABLEAU_ASSIGNMENT_UPDATE.md) was corrected.
+It placed a `pivot` near `Tableau.cpp:2130`; that method is in the
+historical `Reluplex.h`.
+
+### Validation
+
+```text
+$ isabelle build -c -e -D Isabelle        (106 theories)
+Finished Marabou_Verification (0:02:33 elapsed time, 0:11:07 cpu time, factor 4.35)
+0:02:37 elapsed time, 0:11:07 cpu time, factor 4.23     exit 0
+
+8 exported SML checker tests passed
+72 exported SML proof-tree tests passed
+11 exported SML assignment tests passed
+16 exported SML inequality auxiliary tests passed      (all exit 0)
+
+$ python3 -m unittest discover -s Isabelle/tests -p 'test_*.py'
+Ran 307 tests in 4.391s
+OK
+```
+
+The `build_log` Error/Warning filter was empty, and no forbidden proof or
+axiom token occurs in any project theory. All 631 local links in 38 Markdown
+files resolve and `git diff --check` is clean. The upstream checkouts are
+clean at their pinned revisions. [PROJECT_THEORY_INVENTORY.md](PROJECT_THEORY_INVENTORY.md)
+now lists the 29 theories added after the audit snapshot.
+
+### Assurance
+
+The theorems are about an exact real-arithmetic abstraction of the native
+pivot and simplex step, with zero tolerances and a fresh core cost. They are
+not about the C++ code: factorization, floating point, the entry strategies
+and numerical recovery are outside them. `simplex_run` results concern the
+rows and bounds of a given well-formed tableau. Connecting its initial
+tableau to a query is the next step. No certificate, capture or generated
+theory changed.
