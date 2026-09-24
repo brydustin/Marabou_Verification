@@ -1,13 +1,13 @@
 {
-  "assurance": "Provenance only; replay proves the explicit processed query, not C++ execution.",
-  "binary_sha256": "f459a11ce66a9fba45ba08acbd74b689244b7bd6877f381b3810478e7bcf8d9a",
+  "assurance": "Provenance only; replay proves the explicit captured source query, its equisatisfiability with the processed query, and the latter's UNSAT. The C++ execution and JSON decoding are not verified.",
+  "binary_sha256": "3ffa947b4691299ac64eda6ddfa232efd9b4bd401c12258193c6a914bd7f1a42",
   "capture_compile_command": "/usr/bin/c++ -DBOOST_NO_CXX98_FUNCTION_BASE -I\"/home/dusty/Desktop/Marabou Verification/upstream/Marabou/src/common\" -I\"/home/dusty/Desktop/Marabou Verification/upstream/Marabou/src/configuration\" -I\"/home/dusty/Desktop/Marabou Verification/upstream/Marabou/src/engine\" -I\"/home/dusty/Desktop/Marabou Verification/upstream/Marabou/src/basis_factorization\" -I\"/home/dusty/Desktop/Marabou Verification/upstream/Marabou/src/proofs\" -I\"/home/dusty/Desktop/Marabou Verification/upstream/Marabou/src/nlr\" -I\"/home/dusty/Desktop/Marabou Verification/upstream/Marabou/deps/CVC4\" -I\"/home/dusty/Desktop/Marabou Verification/upstream/Marabou/deps/CVC4/include\" -I\"/home/dusty/Desktop/Marabou Verification/upstream/Marabou/tools/cxxtest\" -O3 -DNDEBUG -std=gnu++17 -O1 -ffunction-sections -fdata-sections -o CMakeFiles/marabou_solver_capture.dir/capture.cpp.o -c \"/home/dusty/Desktop/Marabou Verification/Isabelle/tools/solver_capture/capture.cpp\"",
-  "capture_script_sha256": "53d2affe5f27ff763969ea5459240c597cf343ef5b57f7cacf3df8d8fd693c75",
+  "capture_script_sha256": "5db47929091f610365d33a36d69e1d0543ec90dcbf72c948447cbf2a8ed1fa84",
   "certificate_sha256": "f48f21433d1352aa104be66f05047052937015981647dccde74e5e2bd1a95718",
   "cmake_sha256": "4066a000197204b94ac6434212a6d2e6c238bbe87e9103d9e44596e62daacc8a",
   "cmake_version": "cmake version 3.28.3",
   "compiled_sources": {
-    "Isabelle/tools/solver_capture/capture.cpp": "2a2e7ceaceaca7c9f22634e903bf638229582cdb62d6e9c82c3814e213b63191",
+    "Isabelle/tools/solver_capture/capture.cpp": "fb06322dcc73b2839945effedd7642216e4499db65d89cb0b64e383c1d035f4d",
     "upstream/Marabou/deps/CVC4/base/check.cpp": "67aad610256512c2b7345de798df0b815a632866c11a79d60b63e27d74e724e5",
     "upstream/Marabou/deps/CVC4/base/exception.cpp": "dfc32b9954b98621cdde39ac456a8e4dab5a1d8008c5ae3cb41f85fd75529692",
     "upstream/Marabou/deps/CVC4/base/output.cpp": "8a5ac0df7537b316fa20b785fc98b07c99c8f004cce23e57c397bc97afce531e",
@@ -129,7 +129,8 @@
     "upstream/Marabou/src/proofs/UnsatCertificateUtils.cpp": "e951bdfe4260cbff8709c9fef36396b70b702f2b52d40a9590720978e2b53f2d"
   },
   "compiler_version": "c++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
-  "importer_sha256": "1bd14f86d5116ece06472a51cf2a0b1f2ec0e199c6ce92c89adf007e36509031",
+  "importer_sha256": "036984d99c05bbc481a8fbe67f97464bb5b3c8884849a6f8b18fdb8e43f2bd41",
+  "introduction_list_sha256": "8b0d136f369b128f79fac0286d25e9fd05e1bbe9ac560c7df1b44b454d53f9aa",
   "linked_libraries": {
     "BOOST_CHRONO_LIBRARY": {
       "path": "/home/dusty/Desktop/Marabou Verification/Isabelle/generated/solver_deps/root/usr/lib/x86_64-linux-gnu/libboost_chrono.so.1.83.0",
@@ -154,7 +155,9 @@
   },
   "marabou_revision": "1c2f4788c32e2f4e407c356b763a8025c5578722",
   "processed_query_sha256": "29f43949273a4c37fc996d21e9d2171445ddd1a6b7d2690bcbb787ec0eca85f4",
-  "run_report_sha256": "79c40a15bf77057ef000fd75b5ba816b7463c8c2c1f25df189705d6e9f1f0086",
+  "run_report_sha256": "84cbb6e1371bac2ff94b24ceca805be67cbb75db28d58c6f25d9324f6ab288f5",
   "scenario": "relu_aux_active",
-  "solver_log_sha256": "53726315eec67a69bfdcf0411bf6535fe72806f2d33e9801e346d4f3532ff608"
+  "solver_log_sha256": "e9ad361efc9342d10c238d17d4ccd907b0ecdb0860e0218b093c7f0dd961c0cd",
+  "source_importer_sha256": "91801374e9b4e9a50953bd87bddb5b058fdf94e3a1a9e7d7657fdef1d182ee22",
+  "source_query_sha256": "0c04cea768c4943371de86077b4a21e25c3af6f8ac9bf2fbfbf6b196cad7c08b"
 }

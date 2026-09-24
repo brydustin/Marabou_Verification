@@ -1,0 +1,6 @@
+Engine::processInputQuery(input, true): true
+Engine::solve(10): true; exit code SAT
+Proof production: true; preprocessing: true; DeepSoI: false
+Processed variables: 7; rows: 3
+Native Preprocessor::preprocess: 4 input -> 4 preprocessed variables; variable maps recorded.
+Captured the native assignment of all 4 input variables; it is candidate witness data, not a proof.

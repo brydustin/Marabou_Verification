@@ -1,0 +1,12 @@
+Engine::processInputQuery(input, false): true
+Engine::solve(10): false; exit code UNSAT
+Proof production: true; preprocessing: false; DeepSoI: false
+Processed variables: 11; rows: 4
+PLC lemmas: 0 before solve; 2 after solve
+Main-loop iterations: 2; simplex steps: 0
+Initial query/tableau/ground-bound snapshot comparison: exact match
+Captured unmodified solver certificate and pre-solve query snapshot.
+Captured pre-initialization source query and 4 proposed scalar-fixed introductions.
+Native ReluConstraint::transformToUseAuxVariables: two calls; 5 -> 7 variables.
+Captured queries before and after the native ReLU introduction sequence.
+ReLU phases fixed before solve: 1; recorded with their valid splits for exact justification.

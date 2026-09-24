@@ -1,0 +1,7 @@
+Engine::processInputQuery(input, false): true
+Engine::solve(10): true; exit code SAT
+Proof production: true; preprocessing: false; DeepSoI: false
+Processed variables: 6; rows: 2
+Native ReluConstraint::transformToUseAuxVariables: one calls; 3 -> 4 variables.
+ReLU phases fixed before solve: 1; recorded with their valid splits.
+Captured the native assignment of all 6 processed variables; it is candidate witness data, not a proof.

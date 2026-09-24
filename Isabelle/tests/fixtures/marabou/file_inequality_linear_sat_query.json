@@ -1,0 +1,8 @@
+{
+  "tableau": [
+    [{"var": 0, "val": 1}, {"var": 1, "val": -1}, {"var": 2, "val": 1}, {"var": 3, "val": -1}]
+  ],
+  "upperBounds": [1, 2, 4, 0],
+  "lowerBounds": [-2, 0, 0, 0],
+  "constraints": []
+}

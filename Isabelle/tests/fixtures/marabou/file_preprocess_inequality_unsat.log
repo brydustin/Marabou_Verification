@@ -1,0 +1,3 @@
+Engine::processInputQuery(input, true): false; exit code UNSAT
+Preprocessor::preprocess threw InfeasibleQueryException; no native proof exists.
+Recorded the infeasibility for exact re-derivation.

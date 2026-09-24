@@ -1,0 +1,10 @@
+{
+  "format": "marabou-assignment-v1",
+  "variables": 4,
+  "values": [
+    {"var": 0, "value": 0.5, "hex": "0x1p-1"},
+    {"var": 1, "value": 0.5, "hex": "0x1p-1"},
+    {"var": 2, "value": 0.25, "hex": "0x1p-2"},
+    {"var": 3, "value": 0.5, "hex": "0x1p-1"}
+  ]
+}

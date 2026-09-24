@@ -1,0 +1,11 @@
+{
+  "format": "marabou-plain-relu-query-v1",
+  "variables": 5,
+  "equations": [
+    {"type": "EQ", "addends": [{"var": 2, "val": 1}, {"var": 1, "val": -1}], "scalar": -0.25},
+    {"type": "EQ", "addends": [{"var": 3, "val": 1}, {"var": 4, "val": -1}], "scalar": 0}
+  ],
+  "upperBounds": [-0.5, 2, 2, 2, 2],
+  "lowerBounds": [-2, 0, -2, 0, 0.25],
+  "constraints": [{"constraintType": 0, "vars": [0, 1]}, {"constraintType": 0, "vars": [2, 3]}]
+}

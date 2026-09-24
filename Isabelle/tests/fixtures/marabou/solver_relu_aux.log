@@ -6,3 +6,4 @@ PLC lemmas: 0 before solve; 2 after solve
 Main-loop iterations: 2; simplex steps: 0
 Initial query/tableau/ground-bound snapshot comparison: exact match
 Captured unmodified solver certificate and pre-solve query snapshot.
+Captured pre-initialization source query and 3 proposed scalar-fixed introductions.

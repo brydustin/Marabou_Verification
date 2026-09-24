@@ -128,3 +128,173 @@ It additionally inspects `ReluConstraint::transformToUseAuxVariables` and
 lower explanation, and checks both directions of the auxiliary equation.
 Two new native runs replay: the earlier broader variant, and an active-phase
 case where the auxiliary rule is the sole nonlinear inference.
+
+The [binary split capture](SOLVER_RELU_SPLIT_CAPTURE.md) now exercises
+`src/engine/Engine.cpp::performConstraintFixingStep/reportPlViolation`,
+`src/engine/SearchTreeHandler.cpp::reportViolatedConstraint/performSplit/popSplit`,
+and `ReluConstraint::getCaseSplits/getActiveSplit/getInactiveSplit` in a native
+solve. The harness sets the existing `Options::CONSTRAINT_VIOLATION_THRESHOLD`
+to 1. Native search creates the two proof children, applies their phase bounds,
+and closes both. `JsonWriter::writeUnsatCertificateNode` emits inactive first;
+the importer identifies phases and the HOL certificate stores active first.
+The run records one split, two pops, three `NUM_TABLEAU_PIVOTS`
+(`src/engine/Tableau.cpp::performPivot/performDegeneratePivot`), and two
+explained leaves. Both child contradictions and the parent replay without
+kernel or importer changes. This does not verify the search or pivot code.
+
+The [single auxiliary introduction](TABLEAU_AUXILIARY.md) formalizes one
+iteration's mathematical transformation in
+`src/engine/Engine.cpp::addAuxiliaryVariables` (line 1290): append coefficient
+`-1` for a fresh variable, fix both bounds to the old scalar, and set the
+scalar to zero. `Query.cpp::setLowerBound/setUpperBound` store those bounds.
+`Engine::createConstraintMatrix` rejects non-equalities before this native
+initialization path. The new checked rational function verifies global
+freshness and selection, constructs the transformed query, and has a
+real-semantic equivalence theorem. Its result matches the earlier linear
+capture exactly, allowing that certificate to prove an explicit pre-auxiliary
+query UNSAT. The native allocation loop, preceding redundant-row removal,
+floating-point storage, and decoder remain unverified.
+
+[Finite composition](TABLEAU_AUXILIARY_SEQUENCE.md) now checks a list of
+`(equation index, fresh variable)` pairs, using each intermediate query.
+For the binary-split input, the five steps `(0,9),…,(4,13)` give exactly
+the earlier processed snapshot, after a proved arithmetic reordering of
+`f-b-a` to `-b+f-a`. The original order is in the `relu_split` branch of
+`Isabelle/tools/solver_capture/capture.cpp::main`; `snapshot` writes the
+matrix by increasing column index. The composition and reused native
+certificate prove the explicit pre-tableau query UNSAT. The source and step
+list in that first example are hand-written HOL data.
+
+[Source capture/import](SOURCE_QUERY_CAPTURE.md) now obtains those inputs
+automatically. `src/engine/InputQuery.cpp::generateQuery` (line 349) copies
+equations and bounds and duplicates constraints without preprocessing.
+The external `capture.cpp::snapshot_source` serializes this copy before
+engine construction, using `Query::getEquations/getPiecewiseLinearConstraints`
+and the bound getters. After initialization, `snapshot_steps` observes one
+new `-1` column per row and proposes its introduction. The HOL sequence
+must construct exactly the independent processed snapshot before the native
+proof is used. All five native scenarios now have generated source-query
+UNSAT theorems. This verifies the explicit mathematical bridge; C++ extraction,
+native initialization, and byte decoding remain unverified.
+
+[Fresh ReLU auxiliary introduction](RELU_AUXILIARY.md) now formalizes the
+new-variable branch of
+`src/engine/ReluConstraint.cpp::transformToUseAuxVariables` (lines 936–978).
+It retains the ReLU, adds `f-b-a=0` and `a≥0`, and uses `max(0,-l)` as the
+finite auxiliary cap. The native method reads `existsLowerBound/getLowerBound`
+from `PiecewiseLinearConstraint.h` (local map or bound manager), whereas the
+checked HOL interface requires an explicit input lower-bound atom. With no
+finite cap, HOL omits the upper bound rather than storing infinity.
+`Preprocessor::informConstraintsOfInitialBounds` notifies the constraints
+before `transformConstraintsIfNeeded` invokes their transformation methods.
+The C++ `_auxVarInUse` no-op branch and variable-count allocation are not
+modeled; HOL checks global syntactic freshness and constructs a new extension.
+
+Model extension assigns `a=f-b=ReLU(-b)`; projection forgets that coordinate.
+The rational wrapper composes the step with existing scalar-fixed introductions
+and proof replay. Its result for an explicit four-variable HOL query equals
+the previously captured `relu_aux` five-variable source, whose native proof
+is reused. That earlier native capture supplied its ReLU auxiliary already.
+
+The subsequent [native introduction capture](NATIVE_RELU_INTRO_CAPTURE.md)
+uses `capture.cpp::introduce_native_relu_aux` to snapshot a plain four-variable
+`Query`, call `Preprocessor::informConstraintsOfInitialBounds` and the real
+`ReluConstraint::transformToUseAuxVariables`, record its selected variables
+and finite lower bound, and snapshot the independent five-variable result.
+The three tableau introductions and full native UNSAT proof are then captured
+as before. A separate six-artifact importer emits exact result equality,
+before/processed equisatisfiability, and before-query UNSAT theorems.
+This executes one native transformation directly, with general preprocessing
+disabled; extraction, bound-cache refinement and byte decoding are unverified.
+
+The [inequality introduction extension](INEQUALITY_AUXILIARY.md) models
+`Preprocessor.cpp::makeAllEquationsEqualities` (lines 224–244), called near
+the start of `Preprocessor::preprocess`. It appends coefficient +1 for a
+fresh slack in both directions, with a lower zero bound for LE and an upper
+zero bound for GE. The function is private in `Preprocessor.h`.
+One-step and finite-sequence soundness are now proved mathematically; these
+introductions have not yet been captured from a native preprocessing run.
+The current native file pipeline requires finite bounds in both directions,
+so the missing opposite slack bound must be justified separately.
+
+[Finite ReLU auxiliary composition](RELU_AUXILIARY_SEQUENCE.md) now corresponds
+to multiple such calls. `Preprocessor.cpp::transformConstraintsIfNeeded`
+(lines 212–216) iterates the constraint transformation methods. Our harness
+`capture.cpp::introduce_native_relu_aux_sequence` snapshots two plain ReLUs,
+notifies their initial bounds once, calls both real methods and records the
+ordered introductions. HOL checks global freshness against each current
+query, constructs each result, and checks the entire final snapshot.
+The accepted `relu_sequence` run goes from six to eight to thirteen variables,
+with two `ReluConstraint::notifyUpperBound` input-to-output lemmas and a leaf.
+
+A separate exploratory query produced output-lower-to-auxiliary-upper evidence
+in `ReluConstraint.cpp::notifyLowerBound`, in the positive
+`(variable == _f || variable == _b)` branch (around lines 177–196).
+The [output-based case](RELU_OUTPUT_BOUND_PROPAGATION.md) is now checked
+separately from the input-lower rule. `Checker.cpp::checkReluLemma` around
+lines 674–678 tests the explained output lower bound plus epsilon; HOL
+requires strict positivity of the exact rational premise and two checked
+implications for the auxiliary equation. The full preserved proof replays
+without filtering nodes. A fresh `relu_chain` run reproduces its six data
+artifacts and records full provenance. The native epsilon policy and C++
+implementation remain unverified.
+
+The dual [positive-auxiliary branch](RELU_AUX_LOWER_BOUND_PROPAGATION.md) is
+`ReluConstraint.cpp::notifyLowerBound`, lines 207–226:
+`_auxVarInUse && variable == _aux && FloatUtils::isPositive(bound)`.
+`checkIfLowerBoundUpdateFixesPhase` (lines 125–133) first marks the phase
+inactive. In proof mode the branch calls
+`BoundManager::addLemmaExplanationAndTightenBound(_f, 0, UB, {_aux}, LB, ...)`,
+which records a `PLCLemma` only if `f`'s upper bound actually tightens
+(`BoundManager.cpp`, lines 414–494), then tightens `_b <= -bound` through the
+tightening row as an explained linear update, not as a lemma.
+`Checker.cpp::checkReluLemma`, lines 685–689, accepts `causingVar == aux`, LB,
+`affectedVar == f`, UB when the explained bound plus epsilon is positive.
+`BoundManager::propagateTightenings` (lines 268–284) notifies constraints in
+ascending variable index, lower before upper; the `relu_aux_inactive` capture
+gives the auxiliary index 0 so that its notification precedes the output's.
+
+For SAT results, `Engine::extractSolution` (`Engine.cpp`, lines 1736–1775)
+writes `Tableau::getValue(i)` into `IQuery::setSolutionValue` for each variable
+of the supplied query; with preprocessing disabled no variable is merged,
+fixed or renumbered. The `relu_sat` harness scenario applies it to a copy of
+the processed query and serializes each double as a round-trip decimal and an
+exact hexadecimal float. Marabou's own SAT acceptance
+(`ReluConstraint::satisfied`, `Engine::adjustAssignmentToSatisfyNonLinearConstraints`)
+uses tolerances; the [exact assignment checker](SAT_ASSIGNMENTS.md) does not.
+
+ReLU phases fixed before search
+([RELU_PHASE_FIXING.md](RELU_PHASE_FIXING.md)): with preprocessing disabled,
+`Engine::invokePreprocessor` calls `Preprocessor::informConstraintsOfInitialBounds`
+(`Preprocessor.cpp`, lines 1121–1142) on its copy of the query before any
+bound manager exists. `ReluConstraint::notifyLowerBound`/`notifyUpperBound`
+then take their `_boundManager == nullptr` branch, which only records the
+bound and calls `checkIfLowerBoundUpdateFixesPhase` /
+`checkIfUpperBoundUpdateFixesPhase` (lines 125–146). The latter uses the
+non-proof policy (`!isPositive`), because `proofs` is computed from the
+absent bound manager. `Engine::solve` registers the bound manager, then
+calls `applyAllValidConstraintCaseSplits` (lines 202–208). Each fixed,
+active constraint is disabled, its `getValidCaseSplit()` (= `getImpliedCaseSplit`,
+lines 712–725) is recorded with `SearchTreeHandler::recordImpliedValidSplit`,
+and it is applied by `Engine::applySplit`. In proof mode, `applySplit` adds
+only strictly tighter split bounds, as new ground bounds with
+`isPhaseFixing = true` and a reset explanation (lines 2108–2134). No
+certificate node records them, so `Checker::checkNode` never sees them.
+
+Native preprocessing ([NATIVE_PREPROCESSING.md](NATIVE_PREPROCESSING.md)):
+`Engine::processInputQuery(input, true)` makes `invokePreprocessor`
+(`Engine.cpp`, lines 980–1011) call
+`Preprocessor::preprocess(input, PREPROCESSOR_ELIMINATE_VARIABLES)`
+(`Preprocessor.cpp`, lines 61–180; the elimination flag is `true` in
+`GlobalConfiguration.cpp`, line 79). After it, `processInputQuery`
+(lines 1414 onward) runs symbolic tightening, simulation and MILP
+tightening. With no network-level reasoner and the harness's `none`
+tightening option these change nothing here. `InfeasibleQueryException` from
+preprocessing is caught at lines 1574–1583: the engine sets `UNSAT` and
+returns false, with no certificate. `Engine::extractSolution`
+(lines 1736–1784) maps a solution back through `variableIsMerged`,
+`variableIsFixed` and `getNewIndex`. The tightening loop accepts an
+improvement only above `PREPROCESSOR_BOUND_TOLERANCE`, and snaps intervals
+narrower than `PREPROCESSOR_ALMOST_FIXED_THRESHOLD` (`1e-5`, line 82) to a
+point (e.g. `processEquations`, lines 470–481). The exact projection check
+rejects any result that relies on such a tolerance.

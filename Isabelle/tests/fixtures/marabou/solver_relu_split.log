@@ -1,0 +1,11 @@
+Engine::processInputQuery(input, false): true
+Engine::solve(10): false; exit code UNSAT
+Proof production: true; preprocessing: false; DeepSoI: false
+Processed variables: 14; rows: 5
+PLC lemmas: 0 before solve; 0 after solve
+Main-loop iterations: 12; simplex steps: 9
+Initial query/tableau/ground-bound snapshot comparison: exact match
+Captured unmodified solver certificate and pre-solve query snapshot.
+Captured pre-initialization source query and 5 proposed scalar-fixed introductions.
+Binary ReLU split: one active and one inactive child, both closed.
+Search splits: 1; tableau pivots: 3; explained leaves: 2

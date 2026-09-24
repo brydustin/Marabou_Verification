@@ -172,10 +172,16 @@ nonempty linear explanation in [SOLVER_RELU_CAPTURE.md](SOLVER_RELU_CAPTURE.md).
 The latter uses the unchanged implication checker and adapter, on a premise
 generated during `Engine::solve`. The separate semantic obligation remains to
 connect processed queries to original queries through verified preprocessing
-and auxiliary introductions. Solver-produced binary splitting remains untested.
+and auxiliary introductions.
 The auxiliary extension now also replays two real solver-produced lower
 explanations, including the broader negative variant that was previously
-rejected. The next integration target is a native binary split with both
-children replayed.
+rejected. A native binary split with both children replayed is now captured in
+[SOLVER_RELU_SPLIT_CAPTURE.md](SOLVER_RELU_SPLIT_CAPTURE.md), using the existing
+checker. A scalar-fixed tableau auxiliary introduction is now verified in
+[TABLEAU_AUXILIARY.md](TABLEAU_AUXILIARY.md), with an exact source-query
+connection for the linear capture.
+[Finite composition](TABLEAU_AUXILIARY_SEQUENCE.md) now covers the five
+introductions of the binary-split capture. Capturing/importing its source
+query and proposed step list remains the next small integration target.
 Other nonlinear rules, Alethe, infinite bounds, and general reconstruction
 remain outside this extension.

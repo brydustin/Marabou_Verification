@@ -1,0 +1,9 @@
+marabou-exact-query-v1
+eq 1 x1 -1 x2 = 0
+lower x0 -2
+upper x0 -1/2
+lower x1 0
+upper x1 2
+lower x2 1/4
+upper x2 2
+relu x0 x1

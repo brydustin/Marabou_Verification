@@ -1,0 +1,15 @@
+{
+  "format": "marabou-source-query-v1",
+  "variables": 10,
+  "equations": [
+    {"type": "EQ", "addends": [{"var": 0, "val": 1}, {"var": 2, "val": -1}, {"var": 4, "val": -1}], "scalar": 0.25},
+    {"type": "EQ", "addends": [{"var": 0, "val": 1}, {"var": 2, "val": 1}, {"var": 5, "val": -1}], "scalar": 0.25},
+    {"type": "EQ", "addends": [{"var": 1, "val": 1}, {"var": 3, "val": -1}, {"var": 6, "val": -1}], "scalar": 0.25},
+    {"type": "EQ", "addends": [{"var": 1, "val": 1}, {"var": 3, "val": 1}, {"var": 7, "val": -1}], "scalar": 0.25},
+    {"type": "EQ", "addends": [{"var": 0, "val": 1}, {"var": 1, "val": -1}, {"var": 8, "val": -1}], "scalar": 0},
+    {"type": "EQ", "addends": [{"var": 0, "val": 1}, {"var": 8, "val": -1}, {"var": 9, "val": -1}], "scalar": 0}
+  ],
+  "upperBounds": [1, 1, 0.75, 0.75, 1.5, 1.5, 1.5, 1.5, 1, 1],
+  "lowerBounds": [0, 0, -0.75, -0.75, 0, 0, 0, 0, -1, 0],
+  "constraints": [{"constraintType": 0, "vars": [8, 0, 9]}]
+}

@@ -1,0 +1,5 @@
+Engine::processInputQuery(input, false): true
+Engine::solve(10): true; exit code SAT
+Proof production: true; preprocessing: false; DeepSoI: false
+Processed variables: 4; rows: 1
+Captured the native assignment of all 4 processed variables; it is candidate witness data, not a proof.

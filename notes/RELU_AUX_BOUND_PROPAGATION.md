@@ -65,7 +65,7 @@ the mathematical rule above is our exact model, not a proof of those methods.
 | Source | Relevant behavior |
 | --- | --- |
 | `src/engine/ReluConstraint.cpp::transformToUseAuxVariables` | Introduces `f-b-a=0` and nonnegative `a`; chooses its upper bound from the input lower bound. This transformation itself is not verified or invoked by our auxiliary-form capture inputs. |
-| `ReluConstraint.cpp::notifyLowerBound` | With proof production and an unfixed phase, a negative input lower bound can emit `a ≤ -l`; a positive/zero input lower bound emits `a ≤ 0`. The output-lower-to-auxiliary rule in this method remains outside our supported pattern. |
+| `ReluConstraint.cpp::notifyLowerBound` | With proof production and an unfixed phase, a negative input lower bound can emit `a ≤ -l`; a positive/zero input lower bound emits `a ≤ 0`. The distinct output-lower-to-auxiliary rule is now covered by the [positive-output extension](RELU_OUTPUT_BOUND_PROPAGATION.md). |
 | `src/engine/BoundManager.cpp::addLemmaExplanationAndTightenBound` | Captures the causing variable's lower explanation, appends the native `PLCLemma`, promotes the auxiliary upper bound to a ground bound, and resets its explanation. |
 | `src/proofs/BoundExplainer.cpp::updateBoundExplanation/getExplanation` | Supplies signed weights over original tableau rows for the linear premise. |
 | `src/proofs/UnsatCertificateUtils.cpp::computeBound/getExplanationRowCombination/computeCombinationLowerBound` | Computes `c=e_b+wᵀA`, then uses lower ground bounds for positive coefficients and upper ground bounds for negative coefficients. |
@@ -79,9 +79,11 @@ of whether a particular native notification would emit a new lemma.
 
 ## Exact import of lower explanations and auxiliary equations
 
-The adapter recognizes only the input/auxiliary pair of a unique remaining
-ReLU in the metadata. Other causing variables, affected lower bounds, other
-activation types, multiple causes, and unknown fields remain rejected.
+For this rule the adapter recognizes the input/auxiliary pair of a unique
+remaining ReLU in the metadata. The later positive-output extension adds
+the output/auxiliary pair with its separate strict positivity guard.
+Affected lower bounds, other activation types, multiple causes, and unknown
+fields remain rejected.
 The metadata selects a candidate equation; it does not prove it.
 
 For a nonempty explanation it forms:
@@ -200,10 +202,10 @@ isabelle build -d Isabelle -D /tmp/marabou-aux-active
 The generated [negative](../Isabelle/Imported_Marabou_Solver_Relu_Aux.thy) and
 [active](../Isabelle/Imported_Marabou_Solver_Relu_Aux_Active.thy) theories are in
 the main session. Each proves acceptance with `code_simp` and derives real
-UNSAT from `check_certificate_sound`. There are now 32 project theories,
+UNSAT from `check_certificate_sound`. At this milestone there were 32 project theories,
 13 imported certificates, and four actual solver captures.
 
-Validation includes 86 importer tests and 35 exported SML tree-checker tests.
+Validation at this milestone included 86 importer tests and 35 exported SML tree-checker tests.
 HOL examples cover negative/zero/positive lower bounds, weaker conclusions,
 overstrong conclusions, both equation witnesses, wrong variables, missing
 premises, and unchecked continuations. A real model proves that omitting the
@@ -222,7 +224,18 @@ preprocessing, auxiliary introduction, and original-query correspondence
 remain unverified. No incorrect solver result or checker soundness failure
 was observed.
 
-The next small integration target is a solver-produced binary ReLU split
-whose two children replay with supported evidence. The separate semantic
-target remains a verified bridge through auxiliary introduction to the
-original query. Other ReLU propagation patterns remain outside this extension.
+The proposed binary-split target is now complete in
+[SOLVER_RELU_SPLIT_CAPTURE.md](SOLVER_RELU_SPLIT_CAPTURE.md), with both native
+children replayed. [TABLEAU_AUXILIARY.md](TABLEAU_AUXILIARY.md) now proves
+introduction of one fresh scalar-fixed tableau auxiliary and connects the
+earlier linear capture to an explicit source query.
+[Finite composition](TABLEAU_AUXILIARY_SEQUENCE.md) now also connects the
+binary-split capture to its explicit pre-tableau query.
+[Source capture/import](SOURCE_QUERY_CAPTURE.md) now obtains both inputs
+automatically and checks that bridge for all five native scenarios, including
+these auxiliary-bound captures.
+[One fresh ReLU auxiliary introduction](RELU_AUXILIARY.md) is now proved too.
+It produces exactly this negative capture's source from explicit four-variable
+HOL data and composes with its native proof. Capturing/importing the native
+introduction is the next small integration target; other ReLU propagation
+patterns remain separate.

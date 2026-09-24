@@ -1,0 +1,7 @@
+{
+  "format": "marabou-relu-aux-sequence-v1",
+  "steps": [
+    {"input": 0, "output": 1, "auxiliary": 5, "lower": -2},
+    {"input": 2, "output": 3, "auxiliary": 6, "lower": -2}
+  ]
+}

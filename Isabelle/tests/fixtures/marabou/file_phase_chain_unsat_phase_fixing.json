@@ -1,0 +1,6 @@
+{
+  "format": "marabou-root-phase-fixing-v1",
+  "fixed": [
+    {"input": 0, "output": 1, "auxiliary": 5, "phase": "inactive", "bounds": [{"var": 0, "type": "U", "value": 0}, {"var": 1, "type": "U", "value": 0}]}
+  ]
+}

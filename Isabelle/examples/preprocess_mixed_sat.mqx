@@ -1,0 +1,10 @@
+marabou-exact-query-v1
+eq 1 x0 -1 x3 = 0
+le 1 x1 1 x2 <= 3/2
+ge 1 x3 >= 1/2
+lower x0 -1
+upper x0 2
+lower x2 1/4
+upper x2 1/4
+upper x3 2
+relu x0 x1

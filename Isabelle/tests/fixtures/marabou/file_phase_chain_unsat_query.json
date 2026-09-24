@@ -1,0 +1,11 @@
+{
+  "tableau": [
+    [{"var": 1, "val": -1}, {"var": 2, "val": 1}, {"var": 7, "val": -1}],
+    [{"var": 3, "val": 1}, {"var": 4, "val": -1}, {"var": 8, "val": -1}],
+    [{"var": 0, "val": -1}, {"var": 1, "val": 1}, {"var": 5, "val": -1}, {"var": 9, "val": -1}],
+    [{"var": 2, "val": -1}, {"var": 3, "val": 1}, {"var": 6, "val": -1}, {"var": 10, "val": -1}]
+  ],
+  "upperBounds": [-0.5, 2, 2, 2, 2, 2, 2, -0.25, 0, 0, 0],
+  "lowerBounds": [-2, 0, -2, 0, 0.25, 0, 0, -0.25, 0, 0, 0],
+  "constraints": [{"constraintType": 0, "vars": [0, 1, 5, 9]}, {"constraintType": 0, "vars": [2, 3, 6, 10]}]
+}

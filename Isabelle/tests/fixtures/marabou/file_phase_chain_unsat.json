@@ -1,0 +1,23 @@
+{
+"tableau" : [
+[{"var" : 1, "val" : -1.0}, {"var" : 2, "val" : 1.0}, {"var" : 7, "val" : -1.0}],
+[{"var" : 3, "val" : 1.0}, {"var" : 4, "val" : -1.0}, {"var" : 8, "val" : -1.0}],
+[{"var" : 0, "val" : -1.0}, {"var" : 1, "val" : 1.0}, {"var" : 5, "val" : -1.0}, {"var" : 9, "val" : -1.0}],
+[{"var" : 2, "val" : -1.0}, {"var" : 3, "val" : 1.0}, {"var" : 6, "val" : -1.0}, {"var" : 10, "val" : -1.0}]
+], 
+"upperBounds" : [-0.5, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, -0.25, 0.0, 0.0, 0.0],
+"lowerBounds" : [-2.0, 0.0, -2.0, 0.0, 0.25, 0.0, 0.0, -0.25, 0.0, 0.0, 0.0],
+"constraints" : [
+{"constraintType" : 0, "vars" : [0, 1, 5, 9]},
+{"constraintType" : 0, "vars" : [2, 3, 6, 10]}
+],
+"proof" : { 
+"lemmas" : [
+{"affVar" : 6, "affBound" : "U", "bound" : 0.250001, "causVar" : 2, "causBound" : "L", "constraint" : 0,
+"expl" : [ {"var" : 0, "val" : -1.0} ]},
+{"affVar" : 3, "affBound" : "U", "bound" : 0.0, "causVar" : 2, "causBound" : "U", "constraint" : 0,
+"expl" : [ {"var" : 0, "val" : -1.0} ]}
+],
+"contradiction" : [ {"var" : 0, "val" : -1.0}, {"var" : 1, "val" : 1.0}, {"var" : 3, "val" : -1.0} ]
+}
+}

@@ -1,0 +1,14 @@
+{
+  "scenario": "file-preprocess",
+  "proof_production": true,
+  "preprocessing": true,
+  "deepsoi": false,
+  "initialization_succeeded": false,
+  "preprocessing_found_unsat": true,
+  "exit_code": "UNSAT",
+  "seed": 1,
+  "input_variables": 3,
+  "input_rows": 2,
+  "relu_constraints": 1,
+  "native_certificate": null
+}

@@ -1,0 +1,8 @@
+{
+  "format": "marabou-fixed-aux-sequence-v1",
+  "steps": [
+    {"equation": 0, "variable": 5},
+    {"equation": 1, "variable": 6},
+    {"equation": 2, "variable": 7}
+  ]
+}

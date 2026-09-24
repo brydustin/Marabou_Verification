@@ -129,6 +129,8 @@ The saved files in [tests/fixtures/marabou](../Isabelle/tests/fixtures/marabou) 
 
 | File | Origin |
 | --- | --- |
+| `solver_linear_source.json` | Pre-initialization `InputQuery::generateQuery` copy, retaining original scalars and addend order. |
+| `solver_linear_steps.json` | Proposed fixed-auxiliary introduction recovered from the added processed column before solving. |
 | `solver_linear_query.json` | Independent snapshot of `getQuery()` before solving. |
 | `solver_linear.json` | Unedited upstream writer output from the solver-produced certificate. |
 | `solver_linear_run.json` | Captured options, outcomes, dimensions, native counters, and runtime snapshot checks. |
@@ -159,5 +161,24 @@ about Marabou, simplex, preprocessing, or a neural-network input is claimed.
 The proposed ReLU propagation integration is now completed in
 [SOLVER_RELU_CAPTURE.md](SOLVER_RELU_CAPTURE.md), using an unedited certificate
 with a nonempty linear explanation and a necessary nonlinear inference.
-Solver-produced binary splitting and the original-query bridge, starting with
-verified auxiliary introduction, remain separate targets.
+Solver-produced binary splitting is now replayed in
+[SOLVER_RELU_SPLIT_CAPTURE.md](SOLVER_RELU_SPLIT_CAPTURE.md).
+One step of that bridge is now proved in
+[TABLEAU_AUXILIARY.md](TABLEAU_AUXILIARY.md): checked auxiliary introduction
+from an explicit two-variable HOL source query gives exactly this processed
+query. The saved certificate therefore proves that source query UNSAT too.
+That first source description is hand-written. The later
+[source capture/import extension](SOURCE_QUERY_CAPTURE.md) now saves the
+actual source and proposed step automatically, with HOL proofs of exact
+processed-query equality and source UNSAT. The capture command above emits
+this extended replay. C++ extraction, byte decoding, and general preprocessing
+correspondence remain unverified.
+
+The harness also has a `file QUERY.mqx` mode, used by the
+[query-file workflow](QUERY_FILE_WORKFLOW.md): it reads a
+`marabou-exact-query-v1` file with an untrusted C++ reader instead of a
+hard-coded scenario. A second mode, `file-preprocess QUERY.mqx`, calls
+`Engine::processInputQuery(input, true)`, enabling Marabou's own
+preprocessing. It records the preprocessed query and the preprocessor's
+variable maps for an independent check; see
+[NATIVE_PREPROCESSING.md](NATIVE_PREPROCESSING.md).

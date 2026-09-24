@@ -1,0 +1,7 @@
+{
+  "format": "marabou-relu-aux-introduction-v1",
+  "input": 0,
+  "output": 1,
+  "auxiliary": 4,
+  "lower": -2
+}

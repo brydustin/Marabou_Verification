@@ -1,0 +1,8 @@
+marabou-exact-query-v1
+le 1 x0 <= -1
+ge 1 x1 >= 1
+lower x0 -2
+upper x0 2
+lower x1 0
+upper x1 2
+relu x0 x1

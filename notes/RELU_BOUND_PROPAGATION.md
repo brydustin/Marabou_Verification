@@ -166,7 +166,7 @@ explanation. The unedited native proof replays in
 so the nonlinear step is necessary. This does not change the provenance of
 the six earlier component fixtures.
 
-The current importer suite passes 86 tests, including deleting/reordering lemmas,
+The current importer suite passes 96 tests, including deleting/reordering lemmas,
 removing one sibling's evidence, and rejecting claimed bounds stronger by
 `1/10^20`. New tests check original-row indices under splits, mixed coefficient
 signs, tiny nonzero weights, and the separation of linear premises from native
@@ -192,6 +192,11 @@ The [linear solver capture](SOLVER_CAPTURE.md) and
 The auxiliary-upper-bound rule suggested by the latter is now verified and
 replayed in [RELU_AUX_BOUND_PROPAGATION.md](RELU_AUX_BOUND_PROPAGATION.md):
 `b ≥ l ⇒ aux ≤ max(0,-l)`, with checked ReLU and auxiliary-equation premises.
-The next integration target is solver-produced binary splitting with both
-children replayed. Alethe and the bridge through preprocessing to original
-queries remain separate obligations.
+Solver-produced binary splitting with both children replayed is now recorded
+in [SOLVER_RELU_SPLIT_CAPTURE.md](SOLVER_RELU_SPLIT_CAPTURE.md).
+One scalar-fixed tableau auxiliary introduction is now verified in
+[TABLEAU_AUXILIARY.md](TABLEAU_AUXILIARY.md), and
+[finite sequences](TABLEAU_AUXILIARY_SEQUENCE.md) now compose these steps for
+the binary-split capture. Capturing/importing its pre-tableau query and step
+list is the next small integration target. Alethe and the full bridge through
+preprocessing to original queries remain separate obligations.

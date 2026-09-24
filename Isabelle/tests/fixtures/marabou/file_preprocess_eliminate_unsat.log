@@ -1,0 +1,11 @@
+Engine::processInputQuery(input, true): true
+Engine::solve(10): false; exit code UNSAT
+Proof production: true; preprocessing: true; DeepSoI: false
+Processed variables: 16; rows: 6
+PLC lemmas: 0 before solve; 0 after solve
+Main-loop iterations: 45; simplex steps: 21
+Initial query/tableau/ground-bound snapshot comparison: exact match
+Captured unmodified solver certificate and pre-solve query snapshot.
+Captured pre-initialization source query and 6 proposed scalar-fixed introductions.
+Native Preprocessor::preprocess: 11 input -> 10 preprocessed variables; variable maps recorded.
+The source snapshot above is the preprocessed query.

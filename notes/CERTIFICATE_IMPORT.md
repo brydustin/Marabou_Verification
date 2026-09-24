@@ -10,6 +10,11 @@ extension](RATIONAL_LINEAR_IMPLICATION.md) now supplies checked tableau-derived
 premises for that rule.
 The [auxiliary propagation extension](RELU_AUX_BOUND_PROPAGATION.md) adds
 input-lower to auxiliary-upper lemmas, with checked auxiliary equations.
+The [positive-output extension](RELU_OUTPUT_BOUND_PROPAGATION.md) adds
+output-lower to auxiliary-upper zero, with a strictly positive exact premise.
+The [positive-auxiliary extension](RELU_AUX_LOWER_BOUND_PROPAGATION.md) adds
+its dual, auxiliary-lower to output-upper zero, also with a strictly positive
+exact premise.
 
 ## Verified recursive checker
 
@@ -21,7 +26,11 @@ datatype certificate =
   | Relu_Split var var certificate certificate
   | Relu_Upper var var rat rat certificate
   | Relu_Aux_Upper var var var rat rat "rat list" "rat list" certificate
+  | Relu_Output_Aux_Upper var var var rat rat "rat list" "rat list" certificate
+  | Relu_Aux_Lower_Output_Upper var var var rat rat "rat list" "rat list" certificate
   | Linear_Bound rat_bound "rat list" certificate
+  | Relu_Fix_Active var var rat_bound "rat list" certificate
+  | Relu_Fix_Inactive var var rat_bound "rat list" certificate
 
 check_certificate :: "rat_query ⇒ certificate ⇒ bool"
 
@@ -44,6 +53,20 @@ tableau-derived input bound becomes an explicit premise for `Relu_Upper`.
 `Relu_Aux_Upper x y a l u pos neg child` requires a present ReLU, an explicit
 input lower bound, two checked linear implications establishing `y-x-a=0`,
 and `max(0,-l)≤u` before adding `a≤u` and checking the child.
+`Relu_Output_Aux_Upper x y a l u pos neg child` instead requires the
+**output** lower bound `RatLower y l`, strict `0<l`, the same two equation
+witnesses, and `0≤u`. It adds `a≤u` and checks the continuation.
+At output zero, this rule is invalid and the checker rejects it.
+`Relu_Aux_Lower_Output_Upper x y a l u pos neg child` is the dual: it requires
+the **auxiliary** lower bound `RatLower a l`, strict `0<l`, the same two
+equation witnesses, and `0≤u`, then adds the output bound `y≤u`.
+At auxiliary zero it is invalid (`x=y=1, a=0`), and the checker rejects it.
+`Relu_Fix_Active x y b ws child` and `Relu_Fix_Inactive x y b ws child`
+justify a ReLU phase that native Marabou fixed before search. The weights
+must prove the phase-deciding bound `b` (`x ≥ l` with `0 ≤ l` or `y ≥ l` with
+`0 < l`; resp. `x ≤ u` or `y ≤ u` with `u ≤ 0`) from the query plus `y ≥ 0`
+and `y ≥ x`. The continuation is then checked against that phase's split
+query only; see [RELU_PHASE_FIXING.md](RELU_PHASE_FIXING.md).
 
 `rat_active_split` adds `x ≥ 0, y - x = 0`; `rat_inactive_split` adds
 `x ≤ 0, y = 0`. Both remove all occurrences of the selected ReLU.
@@ -52,7 +75,10 @@ these operations agrees exactly with the earlier real split operations.
 Structural induction on the finite certificate then combines
 `check_linear_leaf_sound`, `unsatisfiable_relu_split`, and the proved
 model-preserving rules `unsatisfiable_relu_upper_bound`,
-`unsatisfiable_relu_aux_upper_bound`, and
+`unsatisfiable_relu_aux_upper_bound`,
+`unsatisfiable_relu_output_aux_upper_bound`,
+`unsatisfiable_relu_aux_lower_output_upper_bound`,
+`unsatisfiable_relu_fixed_active`, `unsatisfiable_relu_fixed_inactive`, and
 `unsatisfiable_linear_bound`.
 
 `check_certificate_no_model` gives the equivalent no-real-valuation statement.
@@ -82,6 +108,8 @@ Paths and line numbers below refer to the pinned upstream checkout.
 | `JsonWriter.cpp:246`, `writeContradiction`; `Contradiction.{h,cpp}` | Either `[variable_index]` for inconsistent bounds or sparse `[{"var": row_index, "val": weight}, …]`. Here `var` denotes a **row index**, unlike its use in tableau entries. |
 | `JsonWriter.cpp:257`, `writePLCLemmas`; `ReluConstraint.cpp:258`, `notifyUpperBound`; `BoundManager.cpp:414`, `addLemmaExplanationAndTightenBound` | The supported lemma propagates an input upper bound to the output: `constraint = 0`, both bound directions `U`, and empty or sparse row-combination `expl`. See the [detailed source audit](RELU_BOUND_PROPAGATION.md). |
 | `ReluConstraint.cpp::notifyLowerBound`; `UnsatCertificateUtils.cpp::computeCombinationLowerBound` | The second supported pattern propagates an input lower bound to an auxiliary upper bound: `causBound=L`, `affBound=U`, `causVar=b`, `affVar=aux`. Lower explanations and the auxiliary equation are checked exactly; see [the auxiliary contract](RELU_AUX_BOUND_PROPAGATION.md). |
+| `ReluConstraint.cpp::notifyLowerBound`, positive `_f` branch; `src/proofs/Checker.cpp::checkReluLemma`, lines 674–678 | The third pattern has `causVar=f` and `affVar=aux`, LB to UB. HOL requires the reconstructed output lower bound to be strictly positive, without the native epsilon relaxation; see [the positive-output contract](RELU_OUTPUT_BOUND_PROPAGATION.md). |
+| `ReluConstraint.cpp::notifyLowerBound`, positive `_aux` branch, lines 207–226; `Checker.cpp::checkReluLemma`, lines 685–689 | The fourth pattern has `causVar=aux` and `affVar=f`, LB to UB, bound zero. HOL requires the reconstructed auxiliary lower bound to be strictly positive; see [the positive-auxiliary contract](RELU_AUX_LOWER_BOUND_PROPAGATION.md). |
 | `src/proofs/UnsatCertificateUtils.cpp`, `getExplanationRowCombination(unsigned var, ...)`, `computeBound` | Bound explanations use `e_var + wᵀA`, unlike terminal contradictions' `wᵀA`. The exact reconstruction supplies a checked linear implication. |
 | `src/proofs/UnsatCertificateUtils.cpp`, `computeCombinationUpperBound` | For `c = wᵀA`, select upper bounds when `c_j > 0`, lower bounds when `c_j < 0`; contradiction when the resulting upper bound is negative. The C++ implementation uses tolerances. |
 | `src/engine/Engine.cpp:1290`, `addAuxiliaryVariables` | Converts equations to homogeneous tableau rows by introducing variables fixed to the scalars. The adapter interprets the exported rows as `A x = 0`; it does not prove this preprocessing step. |
@@ -118,13 +146,19 @@ with one of the two native contradiction forms, or exactly two children
 covering the active and inactive splits of one remaining ReLU. Either child
 order is accepted. The root cannot introduce split assumptions.
 
-Node `lemmas` lists may contain input-to-output-upper or input-lower-to-auxiliary-upper
-ReLU propagation with empty or nonempty `expl`. An empty explanation uses the current native
-ground input bound. A nonempty one computes a bound from `e_x + wᵀA`; a
+Node `lemmas` lists may contain input-to-output-upper, input-lower-to-auxiliary-upper,
+strictly-positive-output-lower-to-auxiliary-upper, or
+strictly-positive-auxiliary-lower-to-output-upper ReLU propagation with empty
+or nonempty `expl`. The cause/affected pair must select one ReLU and rule
+unambiguously, across all lower-cause patterns and all ReLU metadata,
+including input/output/auxiliary role ambiguity. An empty explanation
+uses the current native ground bound of the actual causing variable.
+A nonempty one computes a bound from `e_cause + wᵀA`; a
 `Linear_Bound` node proves this premise before a ReLU rule uses it. Each used
 ground bound must be reconstructed from the canonical query, and the output
-bound must pass the exact ReLU rule. Auxiliary upper lemmas also require two
-linear witnesses for `f-b-aux=0`, checked before adding the conclusion.
+conclusion must pass the exact ReLU rule. The three lemma patterns involving
+the auxiliary also require two linear witnesses for `f-b-aux=0`, checked
+before adding the conclusion.
 The adapter processes lemmas in order.
 Earlier PLC conclusions may supply later ground bounds; intermediate linear
 premises do not update native ground state. Siblings do not share new bounds.
@@ -256,11 +290,27 @@ are proved from the processed rows and fixed tableau bounds; metadata is not
 treated as an extra premise. See
 [RELU_AUX_BOUND_PROPAGATION.md](RELU_AUX_BOUND_PROPAGATION.md).
 
+The fourteenth certificate, `solver_relu_split.json`, comes from native search
+with one binary ReLU split and two closed linear children. Both canonical
+child queries have exact contradiction margin `1/2`. The root's linear
+relaxation has a HOL model, so a linear leaf alone cannot close it. See
+[SOLVER_RELU_SPLIT_CAPTURE.md](SOLVER_RELU_SPLIT_CAPTURE.md).
+
 All saved root-query numbers are exact dyadic rationals. The new negative
 auxiliary lemma's `1.750002` is instead decoded as `875001/500000` and checked
 as a weaker conclusion than `7/4`. No equality with a binary double is assumed.
-The thirteen
-`Imported_Marabou_*.thy` files in the main session are generated by the adapter.
+A ninth native scenario, `solver_relu_aux_inactive.json`, contains the
+positive-auxiliary lemma `aux≥1/4 ⇒ f≤0`; its root's linear relaxation has a
+HOL model. See [RELU_AUX_LOWER_BOUND_PROPAGATION.md](RELU_AUX_LOWER_BOUND_PROPAGATION.md).
+
+The fifteen processed-query replay theories in the main session are generated
+by this adapter. Six further `Imported_Marabou_Source_*` theories are generated
+by the [source adapter](SOURCE_QUERY_CAPTURE.md) from four artifacts each.
+Three additional native-introduction replays, for
+[one ReLU](NATIVE_RELU_INTRO_CAPTURE.md) and a
+[finite sequence](RELU_AUXILIARY_SEQUENCE.md), plus the
+[chained query](RELU_OUTPUT_BOUND_PROPAGATION.md), import six artifacts and
+prove UNSAT before the ReLU auxiliaries exist.
 Their acceptance and real UNSAT theorems are checked on every changed build.
 Tests also compare them byte-for-byte with regenerated theories. SHA-256
 comments identify the two source files but are not logical premises.
@@ -288,28 +338,64 @@ python3 -m unittest discover -s Isabelle/tests -p 'test_*.py'
 isabelle build -e -D Isabelle
 poly --script Isabelle/tests/linear_leaf_smoke.ML
 poly --script Isabelle/tests/proof_tree_smoke.ML
+poly --script Isabelle/tests/assignment_smoke.ML
 isabelle build -D Isabelle
 ```
 
 The audited Poly/ML executable is recorded in [BUILD_RESULT.md](BUILD_RESULT.md).
-The tests cover 86 importer cases, 8 exported leaf-checker cases, and 35 exported
-tree-checker cases. HOL examples use proof-producing `code_simp`; standalone
+The tests cover 262 importer cases, 8 exported leaf-checker cases, 62 exported
+tree-checker cases, and 11 exported assignment-checker cases. HOL examples use proof-producing `code_simp`; standalone
 SML results have the additional code-generation/compiler/runtime boundary.
 
 ## Remaining obligations
 
-The imported theorem is about a serialized **processed query**. There is no
-verified decoder for original `InputQuery`/network files, proof of preprocessing,
+This adapter's imported theorem is about a serialized **processed query**.
+The source adapter additionally proves equisatisfiability and UNSAT for the
+explicit captured source, using checked scalar-fixed introductions. There is no
+verified decoder for original `InputQuery`/network files, proof of the native
+preprocessing procedure (its results can now be [checked](NATIVE_PREPROCESSING.md)),
 proof that decimal serialization preserves binary-double values, or theorem
 relating a C++ return code to our semantics. Independently supplying a query
 manifest prevents accidental certificate-header substitution but does not
 prove where that manifest came from. Inspect the explicit theorem statement
 when connecting it to an external claim.
 
-Four solver executions are now captured and replayed, including necessary
-output-upper and auxiliary-upper inferences. Solver-produced binary splitting
-remains untested. The encountered auxiliary rule is now supported, with both
+Nine solver scenarios are now captured and replayed, including necessary
+output-upper and auxiliary-upper inferences and a binary ReLU split with both
+children checked. The encountered auxiliary rule is supported, with both
 the lower premise and its defining equation checked; other unsupported
 evidence is still rejected.
-Other PLC rules, verified auxiliary introductions, and preprocessing remain
-needed for broader coverage and the connection back to original queries.
+One scalar-fixed auxiliary introduction is now verified separately in
+[TABLEAU_AUXILIARY.md](TABLEAU_AUXILIARY.md). Its checked result equals the
+linear capture's processed query, so the existing certificate proves an
+explicit two-variable source query UNSAT. The source is hand-written HOL data;
+the decoder and native initialization remain unverified.
+[Finite checked sequences](TABLEAU_AUXILIARY_SEQUENCE.md) now also connect the
+binary-split capture to an explicit nine-variable source query. Those initial
+examples used hand-written source/step data.
+[Automatic capture/import](SOURCE_QUERY_CAPTURE.md) now saves and replays both
+inputs for all five native scenarios, alongside the processed snapshot and
+proof. Its complete query equality is checked in HOL; native extraction and
+JSON decoding remain unverified.
+[One fresh ReLU auxiliary introduction](RELU_AUXILIARY.md) is now verified
+mathematically and composed with the existing scalar-fixed steps and checker.
+Its explicit four-variable example maps exactly to the saved `relu_aux`
+source and reuses that native proof.
+[Native capture/import of that step](NATIVE_RELU_INTRO_CAPTURE.md) now starts
+with a plain ReLU and proves UNSAT of its captured four-variable before-query.
+It uses a separate strict importer and checks the entire independent result.
+[Multiple ReLU introductions](RELU_AUXILIARY_SEQUENCE.md) now compose through
+the same exact checks, with a native two-ReLU example requiring both constraints.
+The exploratory chained example's
+[output-lower-to-auxiliary-upper rule](RELU_OUTPUT_BOUND_PROPAGATION.md)
+is now checked with a strictly positive exact premise. Its full preserved
+bundle replays unchanged; a fresh native run reproduces all six data artifacts
+and provides complete provenance. Its dual,
+[positive-auxiliary-lower-to-output-upper-zero](RELU_AUX_LOWER_BOUND_PROPAGATION.md),
+is now checked too, and an actual native proof using it replays to its
+captured source query. ReLU phases that the initial bounds fix before search
+are now [justified exactly](RELU_PHASE_FIXING.md) from a separate harness
+record. Other PLC rules and verified extraction/decoding remain open. SAT results use a separate exact assignment
+checker and importer; see [SAT_ASSIGNMENTS.md](SAT_ASSIGNMENTS.md). Starting
+queries can also be stated as `.mqx` bytes whose meaning is a HOL decoder; see
+[EXACT_QUERY_FORMAT.md](EXACT_QUERY_FORMAT.md).

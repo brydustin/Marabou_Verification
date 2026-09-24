@@ -1,5 +1,6 @@
 theory Rational_Proof_Trees
-  imports Rational_Linear_Implication ReLU_Splitting ReLU_Aux_Bound_Propagation
+  imports Rational_Linear_Implication ReLU_Splitting ReLU_Aux_Lower_Bound_Propagation
+    ReLU_Phase_Fixing
 begin
 
 text \<open>
@@ -36,16 +37,28 @@ datatype certificate =
   | Relu_Split var var certificate certificate
   | Relu_Upper var var rat rat certificate
   | Relu_Aux_Upper var var var rat rat "rat list" "rat list" certificate
+  | Relu_Output_Aux_Upper var var var rat rat "rat list" "rat list" certificate
+  | Relu_Aux_Lower_Output_Upper var var var rat rat "rat list" "rat list" certificate
   | Linear_Bound rat_bound "rat list" certificate
+  | Relu_Fix_Active var var rat_bound "rat list" certificate
+  | Relu_Fix_Inactive var var rat_bound "rat list" certificate
 
 text \<open>
   Relu_Split stores the active child, then the inactive child. Relu_Upper stores
   the input upper bound, the output upper bound, and a checked continuation.
   Relu_Aux_Upper stores input/output/auxiliary variables, an input lower bound,
   an auxiliary upper bound, and two linear witnesses for the auxiliary equation.
+  Relu_Output_Aux_Upper has the same shape but requires a strictly positive
+  OUTPUT lower bound and a nonnegative auxiliary upper bound.
+  Relu_Aux_Lower_Output_Upper is the dual: a strictly positive AUXILIARY
+  lower bound, the same two equation witnesses, and a nonnegative OUTPUT
+  upper bound, which is the bound it adds.
   Linear_Bound stores a proposed bound, nonnegative normalized-row weights,
   and a continuation. The implication is checked before the bound is added.
-  There are no holes.
+  Relu_Fix_Active and Relu_Fix_Inactive store a ReLU, a phase-deciding bound
+  and weights proving that bound from the query plus y >= 0 and y >= x
+  (ReLU_Phase_Fixing). The continuation is checked against the single phase's
+  split query; there is no second child. There are no holes.
 \<close>
 
 fun check_certificate :: "rat_query \<Rightarrow> certificate \<Rightarrow> bool" where
@@ -60,9 +73,21 @@ fun check_certificate :: "rat_query \<Rightarrow> certificate \<Rightarrow> bool
 | "check_certificate Q (Relu_Aux_Upper x y a l u pos neg child) =
      (check_relu_aux_upper_bound Q x y a l u pos neg \<and>
       check_certificate (rat_add_bound Q (RatUpper a u)) child)"
+| "check_certificate Q (Relu_Output_Aux_Upper x y a l u pos neg child) =
+     (check_relu_output_aux_upper_bound Q x y a l u pos neg \<and>
+      check_certificate (rat_add_bound Q (RatUpper a u)) child)"
+| "check_certificate Q (Relu_Aux_Lower_Output_Upper x y a l u pos neg child) =
+     (check_relu_aux_lower_output_upper_bound Q x y a l u pos neg \<and>
+      check_certificate (rat_add_bound Q (RatUpper y u)) child)"
 | "check_certificate Q (Linear_Bound b ws child) =
      (check_linear_bound Q b ws \<and>
       check_certificate (rat_add_bound Q b) child)"
+| "check_certificate Q (Relu_Fix_Active x y b ws child) =
+     (check_relu_fixed_active Q x y b ws \<and>
+      check_certificate (rat_active_split Q x y) child)"
+| "check_certificate Q (Relu_Fix_Inactive x y b ws child) =
+     (check_relu_fixed_inactive Q x y b ws \<and>
+      check_certificate (rat_inactive_split Q x y) child)"
 
 theorem check_certificate_sound:
   assumes "check_certificate Q cert"
@@ -99,6 +124,22 @@ next
     by (rule Relu_Aux_Upper.IH[OF accepted])
   then show ?case by (rule unsatisfiable_relu_aux_upper_bound[OF checked])
 next
+  case (Relu_Output_Aux_Upper x y a l u pos neg child)
+  have checked: "check_relu_output_aux_upper_bound Q x y a l u pos neg"
+      and accepted: "check_certificate (rat_add_bound Q (RatUpper a u)) child"
+    using Relu_Output_Aux_Upper.prems by simp_all
+  have "unsatisfiable (embed_query (rat_add_bound Q (RatUpper a u)))"
+    by (rule Relu_Output_Aux_Upper.IH[OF accepted])
+  then show ?case by (rule unsatisfiable_relu_output_aux_upper_bound[OF checked])
+next
+  case (Relu_Aux_Lower_Output_Upper x y a l u pos neg child)
+  have checked: "check_relu_aux_lower_output_upper_bound Q x y a l u pos neg"
+      and accepted: "check_certificate (rat_add_bound Q (RatUpper y u)) child"
+    using Relu_Aux_Lower_Output_Upper.prems by simp_all
+  have "unsatisfiable (embed_query (rat_add_bound Q (RatUpper y u)))"
+    by (rule Relu_Aux_Lower_Output_Upper.IH[OF accepted])
+  then show ?case by (rule unsatisfiable_relu_aux_lower_output_upper_bound[OF checked])
+next
   case (Linear_Bound b ws child)
   have checked: "check_linear_bound Q b ws"
       and accepted: "check_certificate (rat_add_bound Q b) child"
@@ -106,6 +147,24 @@ next
   have "unsatisfiable (embed_query (rat_add_bound Q b))"
     by (rule Linear_Bound.IH[OF accepted])
   then show ?case by (rule unsatisfiable_linear_bound[OF checked])
+next
+  case (Relu_Fix_Active x y b ws child)
+  have checked: "check_relu_fixed_active Q x y b ws"
+      and accepted: "check_certificate (rat_active_split Q x y) child"
+    using Relu_Fix_Active.prems by simp_all
+  have "unsatisfiable (embed_query (rat_active_split Q x y))"
+    by (rule Relu_Fix_Active.IH[OF accepted])
+  then show ?case
+    by (rule unsatisfiable_relu_fixed_active[OF checked, folded embed_rat_active_split])
+next
+  case (Relu_Fix_Inactive x y b ws child)
+  have checked: "check_relu_fixed_inactive Q x y b ws"
+      and accepted: "check_certificate (rat_inactive_split Q x y) child"
+    using Relu_Fix_Inactive.prems by simp_all
+  have "unsatisfiable (embed_query (rat_inactive_split Q x y))"
+    by (rule Relu_Fix_Inactive.IH[OF accepted])
+  then show ?case
+    by (rule unsatisfiable_relu_fixed_inactive[OF checked, folded embed_rat_inactive_split])
 qed
 
 corollary check_certificate_no_model:
@@ -116,12 +175,18 @@ corollary check_certificate_rejects_model:
   "satisfies_query v (embed_query Q) \<Longrightarrow> \<not> check_certificate Q cert"
   using check_certificate_no_model by blast
 
-export_code check_certificate check_relu_upper_bound check_relu_aux_upper_bound check_linear_bound check_linear_implication
-  Linear_Unsat Relu_Split Relu_Upper Relu_Aux_Upper Linear_Bound
+export_code check_certificate check_relu_upper_bound check_relu_aux_upper_bound check_relu_output_aux_upper_bound
+  check_relu_aux_lower_output_upper_bound check_linear_bound check_linear_implication
+  check_relu_fixed_active check_relu_fixed_inactive
+  Linear_Unsat Relu_Split Relu_Upper Relu_Aux_Upper Relu_Output_Aux_Upper
+  Relu_Aux_Lower_Output_Upper Linear_Bound Relu_Fix_Active Relu_Fix_Inactive
   RatExpr RatEq RatLe RatGe RatLower RatUpper ReLU
   rat_query.make Fract int_of_integer nat_of_integer checking SML
-export_code check_certificate check_relu_upper_bound check_relu_aux_upper_bound check_linear_bound check_linear_implication
-  Linear_Unsat Relu_Split Relu_Upper Relu_Aux_Upper Linear_Bound
+export_code check_certificate check_relu_upper_bound check_relu_aux_upper_bound check_relu_output_aux_upper_bound
+  check_relu_aux_lower_output_upper_bound check_linear_bound check_linear_implication
+  check_relu_fixed_active check_relu_fixed_inactive
+  Linear_Unsat Relu_Split Relu_Upper Relu_Aux_Upper Relu_Output_Aux_Upper
+  Relu_Aux_Lower_Output_Upper Linear_Bound Relu_Fix_Active Relu_Fix_Inactive
   RatExpr RatEq RatLe RatGe RatLower RatUpper ReLU
   rat_query.make Fract int_of_integer nat_of_integer in SML
   module_name Marabou_Proof_Checker file_prefix Marabou_Proof_Checker

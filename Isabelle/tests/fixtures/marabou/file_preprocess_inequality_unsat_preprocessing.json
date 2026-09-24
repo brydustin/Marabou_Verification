@@ -1,0 +1,7 @@
+{
+  "format": "marabou-preprocessing-map-v1",
+  "input_variables": 3,
+  "slacks": 2,
+  "relu_auxiliaries": 1,
+  "result": "infeasible"
+}

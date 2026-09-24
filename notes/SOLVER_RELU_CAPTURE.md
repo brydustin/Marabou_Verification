@@ -183,6 +183,15 @@ The smallest coverage extension suggested by the experiment was the auxiliary
 rule `b ≥ l ⇒ a ≤ max(0,-l)`, under checked `f=ReLU(b)` and `f-b-a=0` premises.
 That rule is now verified and imported in
 [RELU_AUX_BOUND_PROPAGATION.md](RELU_AUX_BOUND_PROPAGATION.md), including replay
-of the broader input variant with its extra native lemma. A solver-produced binary split
-with both children replayed, and the bridge to original inputs, remain separate
-targets.
+of the broader input variant with its extra native lemma.
+[SOLVER_RELU_SPLIT_CAPTURE.md](SOLVER_RELU_SPLIT_CAPTURE.md) now also replays
+a solver-produced binary split and both children. The bridge to original
+inputs remains open for this multi-equation capture. One scalar-fixed
+auxiliary step is now proved in [TABLEAU_AUXILIARY.md](TABLEAU_AUXILIARY.md),
+with an exact connection for the earlier linear capture.
+[Finite composition](TABLEAU_AUXILIARY_SEQUENCE.md) now also proves the
+pre-tableau query for the binary-split capture UNSAT. Its source and step
+list in the initial example are hand-written.
+[SOURCE_QUERY_CAPTURE.md](SOURCE_QUERY_CAPTURE.md) now captures and imports
+both automatically for all five native scenarios, including this propagation
+case. Generated HOL checks the exact bridge and proves each source UNSAT.

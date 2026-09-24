@@ -1,0 +1,14 @@
+{
+  "format": "marabou-assignment-v1",
+  "variables": 8,
+  "values": [
+    {"var": 0, "value": 0.5, "hex": "0x1p-1"},
+    {"var": 1, "value": 0.5, "hex": "0x1p-1"},
+    {"var": 2, "value": 0.5, "hex": "0x1p-1"},
+    {"var": 3, "value": 0, "hex": "0x0p+0"},
+    {"var": 4, "value": 0, "hex": "0x0p+0"},
+    {"var": 5, "value": 1, "hex": "0x1p+0"},
+    {"var": 6, "value": 0.5, "hex": "0x1p-1"},
+    {"var": 7, "value": 0, "hex": "0x0p+0"}
+  ]
+}

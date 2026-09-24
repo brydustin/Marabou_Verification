@@ -3,8 +3,11 @@
 
 Supported: finite homogeneous tableaux, finite bounds, auxiliary-form ReLUs,
 binary ReLU splits, row-combination and conflicting-bound leaves, and ReLU
-input-to-output and input-lower-to-auxiliary-upper ReLU lemmas with ground or
-tableau-explained premises. Auxiliary equations need exact linear witnesses.
+input-to-output, input-lower-to-auxiliary-upper, strictly-positive-output-
+lower-to-auxiliary-upper, and strictly-positive-auxiliary-lower-to-output-upper
+ReLU lemmas with ground or tableau-explained premises, and ReLU phases fixed
+before solve() (a separate record; each phase is justified exactly).
+Auxiliary equations need exact linear witnesses.
 This untrusted adapter emits data and a code_simp proof obligation. Acceptance
 is established only when Isabelle builds the emitted theory.
 """
@@ -211,23 +214,49 @@ class AuxUpperLemma:
     explanation: tuple[tuple[Fraction, int], ...]
 
 
+@dataclass(frozen=True)
+class OutputAuxUpperLemma:
+    x: int
+    y: int
+    auxiliary: int
+    bound: Fraction
+    explanation: tuple[tuple[Fraction, int], ...]
+
+
+@dataclass(frozen=True)
+class AuxLowerOutputUpperLemma:
+    x: int
+    y: int
+    auxiliary: int
+    bound: Fraction
+    explanation: tuple[tuple[Fraction, int], ...]
+
+
 def parse_lemma(obj, instance):
     # JsonWriter::writePLCLemmas: a single cause and a single explanation.
     fields(obj, ("affVar", "affBound", "bound", "causVar", "causBound", "constraint", "expl"))
     require(type(obj["constraint"]) is int and obj["constraint"] == 0 and
             obj["affBound"] == "U" and obj["causBound"] in ("L", "U"),
             "unsupported PLC lemma: expected ReLU output/auxiliary upper propagation")
-    x, affected = index(obj["causVar"], instance.n), index(obj["affVar"], instance.n)
+    cause, affected = index(obj["causVar"], instance.n), index(obj["affVar"], instance.n)
     explanation = sparse_entries(obj["expl"], len(instance.query.equations))
     if obj["causBound"] == "U":
-        require((x, affected) in instance.query.relus,
+        require((cause, affected) in instance.query.relus,
                 "PLC lemma variables do not name an input/output ReLU pair")
-        return UpperLemma(x, affected, rational(obj["bound"]), explanation)
-    matches = [(b, f, aux) for b, f, aux, _ in instance.relu_metadata
-               if b == x and aux == affected]
-    require(len(matches) == 1, "PLC lemma variables do not name a unique input/auxiliary ReLU pair")
-    b, f, aux = matches[0]
-    return AuxUpperLemma(b, f, aux, rational(obj["bound"]), explanation)
+        return UpperLemma(cause, affected, rational(obj["bound"]), explanation)
+    # Lower causes: input or output lower -> auxiliary upper, or auxiliary
+    # lower -> output upper. One pattern and one ReLU must match in total.
+    matches = [(AuxUpperLemma if cause == b else OutputAuxUpperLemma, b, f, aux)
+               for b, f, aux, _ in instance.relu_metadata
+               if cause in (b, f) and aux == affected]
+    matches += [(AuxLowerOutputUpperLemma, b, f, aux)
+                for b, f, aux, _ in instance.relu_metadata
+                if cause == aux and affected == f]
+    require(len(matches) == 1,
+            "PLC lemma variables do not name a unique input/output-to-auxiliary "
+            "or auxiliary-to-output ReLU pattern")
+    lemma_type, b, f, aux = matches[0]
+    return lemma_type(b, f, aux, rational(obj["bound"]), explanation)
 
 
 @dataclass(frozen=True)
@@ -236,7 +265,7 @@ class Node:
     children: tuple[Node, ...] = ()
     variable: int | None = None
     combination: tuple[tuple[Fraction, int], ...] | None = None
-    lemmas: tuple[UpperLemma | AuxUpperLemma, ...] = ()
+    lemmas: tuple[UpperLemma | AuxUpperLemma | OutputAuxUpperLemma | AuxLowerOutputUpperLemma, ...] = ()
 
 
 def parse_node(obj, instance, depth=0, counter=None):
@@ -369,8 +398,8 @@ class Leaf:
 class Split:
     x: int
     y: int
-    active: Leaf | Split | ReluUpper | ReluAuxUpper | LinearBound
-    inactive: Leaf | Split | ReluUpper | ReluAuxUpper | LinearBound
+    active: Certificate
+    inactive: Certificate
 
 
 @dataclass(frozen=True)
@@ -379,7 +408,7 @@ class ReluUpper:
     y: int
     input_upper: Fraction
     output_upper: Fraction
-    child: Leaf | Split | ReluUpper | ReluAuxUpper | LinearBound
+    child: Certificate
 
 
 @dataclass(frozen=True)
@@ -391,14 +420,54 @@ class ReluAuxUpper:
     auxiliary_upper: Fraction
     positive: tuple[Fraction, ...]
     negative: tuple[Fraction, ...]
-    child: Leaf | Split | ReluUpper | ReluAuxUpper | LinearBound
+    child: Certificate
+
+
+@dataclass(frozen=True)
+class ReluOutputAuxUpper:
+    x: int
+    y: int
+    auxiliary: int
+    output_lower: Fraction
+    auxiliary_upper: Fraction
+    positive: tuple[Fraction, ...]
+    negative: tuple[Fraction, ...]
+    child: Certificate
+
+
+@dataclass(frozen=True)
+class ReluAuxLowerOutputUpper:
+    x: int
+    y: int
+    auxiliary: int
+    auxiliary_lower: Fraction
+    output_upper: Fraction
+    positive: tuple[Fraction, ...]
+    negative: tuple[Fraction, ...]
+    child: Certificate
 
 
 @dataclass(frozen=True)
 class LinearBound:
     bound: Bound
     weights: tuple[Fraction, ...]
-    child: Leaf | Split | ReluUpper | ReluAuxUpper | LinearBound
+    child: Certificate
+
+
+@dataclass(frozen=True)
+class ReluFix:
+    """Relu_Fix_Active or Relu_Fix_Inactive: a phase-deciding bound and weights
+    over relu_hull_query's rows (-y <= 0, x - y <= 0, then the query's rows)."""
+    x: int
+    y: int
+    active: bool
+    bound: Bound
+    weights: tuple[Fraction, ...]
+    child: Certificate
+
+
+Certificate = (Leaf | Split | ReluUpper | ReluAuxUpper | ReluOutputAuxUpper |
+               ReluAuxLowerOutputUpper | LinearBound | ReluFix)
 
 
 def update_bounds(bounds, additions):
@@ -433,35 +502,35 @@ def reconstruct_leaf(instance, query, node, bounds):
     return Leaf(tuple(weights))
 
 
-def reconstruct_premise(instance, query, lemma, bounds, kind):
-    source = bounds[lemma.x, kind]
-    if not lemma.explanation and source in query.bounds:
+def reconstruct_premise(instance, query, variable, explanation, bounds, kind):
+    source = bounds[variable, kind]
+    if not explanation and source in query.bounds:
         return source, None
     span = EqualitySpan(query, instance.n)
-    if not lemma.explanation:
+    if not explanation:
         # A native branch bound may follow from the canonical phase equality.
         weights = span.bound(source)
     else:
         weights = [ZERO] * len(query.rows())
         combined = [ZERO] * (instance.n + 1)
-        combined[lemma.x + 1] = ONE
+        combined[variable + 1] = ONE
         offset = len(query.equations) - len(instance.query.equations)
         # U targets x-u; L targets l-x, reversing the equality signs.
         direction = ONE if kind == "U" else -ONE
-        for a, i in lemma.explanation:
+        for a, i in explanation:
             # UNSATCertificateUtils::getExplanationRowCombination(var,...):
             # c = e_var + w^T A, so c*x = x_var on the original equalities.
             add_scaled(combined, a, instance.query.equations[i].vector(instance.n))
             coefficient = -direction * a
             weights[2 * (offset + i) + (coefficient < 0)] += abs(a)
         value = ZERO
-        for variable, a in enumerate(combined[1:]):
+        for column, a in enumerate(combined[1:]):
             if a:
                 ground_kind = kind if a > 0 else ("L" if kind == "U" else "U")
-                ground = bounds[variable, ground_kind]
+                ground = bounds[column, ground_kind]
                 value += a * ground.value
                 add_scaled(weights, abs(a), span.bound(ground))
-        source = Bound(lemma.x, kind, value)
+        source = Bound(variable, kind, value)
     validate_implication(query, instance.n, source, weights)
     return source, tuple(weights)
 
@@ -477,13 +546,128 @@ def reconstruct_auxiliary_equation(instance, query, lemma):
     return tuple(positive), tuple(negative)
 
 
+PHASE_FIXING_FORMAT = "marabou-root-phase-fixing-v1"
+
+
+@dataclass(frozen=True)
+class PhaseFix:
+    x: int
+    y: int
+    auxiliary: int
+    active: bool
+
+
+def phase_split_bounds(x, y, auxiliary, active):
+    """ReluConstraint::getActiveSplit/getInactiveSplit with the auxiliary in use."""
+    if active:
+        return {Bound(x, "L", ZERO), Bound(auxiliary, "U", ZERO)}
+    return {Bound(x, "U", ZERO), Bound(y, "U", ZERO)}
+
+
+def parse_phase_fixing(obj, instance):
+    """The harness's record of ReLUs whose phase was fixed before solve()."""
+    fields(obj, ("format", "fixed"))
+    require(obj["format"] == PHASE_FIXING_FORMAT, "unsupported phase-fixing record format")
+    raw = array(obj["fixed"])
+    require(0 < len(raw) <= len(instance.relu_metadata), "invalid number of fixed ReLU phases")
+    fixes = []
+    for item in raw:
+        fields(item, ("input", "output", "auxiliary", "phase", "bounds"))
+        x, y, auxiliary = (index(item[key], instance.n) for key in ("input", "output", "auxiliary"))
+        require(item["phase"] in ("active", "inactive"), "unknown ReLU phase")
+        require(any((b, f, a) == (x, y, auxiliary) for b, f, a, _ in instance.relu_metadata),
+                "phase-fixing record names no ReLU of the processed query")
+        active = item["phase"] == "active"
+        split = []
+        for entry in array(item["bounds"]):
+            fields(entry, ("var", "type", "value"))
+            require(entry["type"] in ("L", "U"), "unknown bound direction")
+            split.append(Bound(index(entry["var"], instance.n), entry["type"], rational(entry["value"])))
+        require(len(split) == 2 and set(split) == phase_split_bounds(x, y, auxiliary, active),
+                "phase-fixing record is not the native valid split of its phase")
+        fixes.append(PhaseFix(x, y, auxiliary, active))
+    require(len({(fix.x, fix.y) for fix in fixes}) == len(fixes), "a ReLU phase is fixed twice")
+    return tuple(fixes)
+
+
+def hull_rows(x, y):
+    """The rows ReLU_Phase_Fixing.relu_hull_query prepends: -y <= 0, x - y <= 0."""
+    return (Expr(ZERO, ((-ONE, y),)), Expr(ZERO, ((ONE, x), (-ONE, y))))
+
+
+def phase_premise(instance, query, bounds, fix):
+    """A phase-deciding bound and exact weights over relu_hull_query's rows.
+
+    Native initialization fixes a phase with epsilon tests (for example, an
+    input lower bound >= -epsilon counts as active). Only exact premises are
+    proposed here, and Isabelle checks them again."""
+    n = instance.n
+    if fix.active:
+        candidates = [b for b in (bounds[fix.x, "L"],) if b.value >= 0]
+        candidates += [b for b in (bounds[fix.y, "L"],) if b.value > 0]
+        candidates.append(Bound(fix.x, "L", ZERO))
+    else:
+        candidates = [b for b in (bounds[fix.x, "U"], bounds[fix.y, "U"]) if b.value <= 0]
+    span = EqualitySpan(query, n)
+    hull = hull_rows(fix.x, fix.y)
+    rows = list(hull) + query.rows()
+    for bound in candidates:
+        target = bound.expression().vector(n)
+        for use in (None, 0, 1):
+            residual = list(target)
+            if use is not None:
+                add_scaled(residual, -ONE, hull[use].vector(n))
+            try:
+                found = span.inequality(Expr(residual[0], tuple(
+                    (a, x) for x, a in enumerate(residual[1:]) if a)))
+            except ImportFailure:
+                continue
+            weights = [ZERO, ZERO] + list(found)
+            if use is not None:
+                weights[use] += ONE
+            total = [ZERO] * (n + 1)
+            for w, row in zip(weights, rows):
+                add_scaled(total, w, row.vector(n))
+            check = list(target)
+            add_scaled(check, -ONE, total)
+            if check[0] <= 0 and not any(check[1:]):
+                return bound, tuple(weights)
+    phase = "active" if fix.active else "inactive"
+    raise ImportFailure(f"no exact justification for the {phase} phase fixed before solving "
+                        f"(ReLU x{fix.y} = ReLU(x{fix.x}))")
+
+
+def fix_root_phases(instance, query, bounds, fixes):
+    """Apply each recorded root phase in order, as Engine::solve does first."""
+    steps = []
+    for fix in fixes:
+        require((fix.x, fix.y) in query.relus, "phase-fixing record selects a removed ReLU")
+        bound, weights = phase_premise(instance, query, bounds, fix)
+        steps.append((fix, bound, weights))
+        query = query.split(fix.x, fix.y, fix.active)
+        bounds = update_bounds(bounds, phase_split_bounds(fix.x, fix.y, fix.auxiliary, fix.active))
+    return query, bounds, steps
+
+
 def reconstruct_tree(instance, query, node, bounds):
     steps = []
     for lemma in node.lemmas:
         require((lemma.x, lemma.y) in query.relus, "PLC lemma selects a removed ReLU")
-        auxiliary = isinstance(lemma, AuxUpperLemma)
-        source, weights = reconstruct_premise(instance, query, lemma, bounds, "L" if auxiliary else "U")
-        threshold = max(ZERO, -source.value if auxiliary else source.value)
+        output_cause = isinstance(lemma, OutputAuxUpperLemma)
+        auxiliary_cause = isinstance(lemma, AuxLowerOutputUpperLemma)
+        # Rules whose soundness needs the checked equation y - x - a = 0.
+        auxiliary = isinstance(lemma, (AuxUpperLemma, OutputAuxUpperLemma, AuxLowerOutputUpperLemma))
+        cause = lemma.y if output_cause else lemma.auxiliary if auxiliary_cause else lemma.x
+        source, weights = reconstruct_premise(instance, query, cause, lemma.explanation,
+                                              bounds, "L" if auxiliary else "U")
+        if output_cause:
+            require(source.value > 0, "output lower premise must be strictly positive in exact arithmetic")
+            threshold = ZERO
+        elif auxiliary_cause:
+            require(source.value > 0, "auxiliary lower premise must be strictly positive in exact arithmetic")
+            threshold = ZERO
+        else:
+            threshold = max(ZERO, -source.value if auxiliary else source.value)
         require(threshold <= lemma.bound, "PLC conclusion is too strong in exact arithmetic")
         if weights is not None:
             query = query.add_bound(source)
@@ -491,13 +675,20 @@ def reconstruct_tree(instance, query, node, bounds):
         steps.append((lemma, source, weights, equation))
         # Only the PLC conclusion updates Marabou's ground-bound state.
         # The checked linear premise is local HOL evidence, not a ground update.
-        bound = Bound(lemma.auxiliary if auxiliary else lemma.y, "U", lemma.bound)
+        affected = lemma.auxiliary if auxiliary and not auxiliary_cause else lemma.y
+        bound = Bound(affected, "U", lemma.bound)
         query = query.add_bound(bound)
         bounds = update_bounds(bounds, (bound,))
     cert = reconstruct_node_body(instance, query, node, bounds)
     for lemma, source, weights, equation in reversed(steps):
         if equation is None:
             cert = ReluUpper(lemma.x, lemma.y, source.value, lemma.bound, cert)
+        elif isinstance(lemma, OutputAuxUpperLemma):
+            cert = ReluOutputAuxUpper(lemma.x, lemma.y, lemma.auxiliary, source.value, lemma.bound,
+                                     equation[0], equation[1], cert)
+        elif isinstance(lemma, AuxLowerOutputUpperLemma):
+            cert = ReluAuxLowerOutputUpper(lemma.x, lemma.y, lemma.auxiliary, source.value, lemma.bound,
+                                          equation[0], equation[1], cert)
         else:
             cert = ReluAuxUpper(lemma.x, lemma.y, lemma.auxiliary, source.value, lemma.bound,
                                 equation[0], equation[1], cert)
@@ -528,14 +719,19 @@ def reconstruct_node_body(instance, query, node, bounds):
                                   update_bounds(bounds, inactive.split)))
 
 
-def reconstruct(expected, certificate):
+def reconstruct(expected, certificate, phase_fixing=None):
     instance = parse_instance(expected)
     require(parse_instance(certificate, with_proof=True) == instance,
             "certificate header does not match the independently supplied processed query")
     node = parse_node(certificate["proof"], instance)
     require(not node.split, "root split would add unjustified assumptions")
     bounds = {(b.variable, b.kind): b for b in instance.query.bounds}
-    return instance, reconstruct_tree(instance, instance.query, node, bounds)
+    fixes = () if phase_fixing is None else parse_phase_fixing(phase_fixing, instance)
+    query, bounds, steps = fix_root_phases(instance, instance.query, bounds, fixes)
+    cert = reconstruct_tree(instance, query, node, bounds)
+    for fix, bound, weights in reversed(steps):
+        cert = ReluFix(fix.x, fix.y, fix.active, bound, weights, cert)
+    return instance, cert
 
 
 def hol_rat(value):
@@ -581,6 +777,22 @@ def hol_certificate(cert, indent="    "):
                 f"{hol_rat(cert.input_lower)} {hol_rat(cert.auxiliary_upper)} " +
                 hol_list(hol_rat(w) for w in cert.positive) + "\n" + indent +
                 hol_list(hol_rat(w) for w in cert.negative) +
+                f"\n{indent}(" + hol_certificate(cert.child, indent + "  ") + ")")
+    if isinstance(cert, ReluOutputAuxUpper):
+        return (f"Relu_Output_Aux_Upper {cert.x} {cert.y} {cert.auxiliary} "
+                f"{hol_rat(cert.output_lower)} {hol_rat(cert.auxiliary_upper)} " +
+                hol_list(hol_rat(w) for w in cert.positive) + "\n" + indent +
+                hol_list(hol_rat(w) for w in cert.negative) +
+                f"\n{indent}(" + hol_certificate(cert.child, indent + "  ") + ")")
+    if isinstance(cert, ReluAuxLowerOutputUpper):
+        return (f"Relu_Aux_Lower_Output_Upper {cert.x} {cert.y} {cert.auxiliary} "
+                f"{hol_rat(cert.auxiliary_lower)} {hol_rat(cert.output_upper)} " +
+                hol_list(hol_rat(w) for w in cert.positive) + "\n" + indent +
+                hol_list(hol_rat(w) for w in cert.negative) +
+                f"\n{indent}(" + hol_certificate(cert.child, indent + "  ") + ")")
+    if isinstance(cert, ReluFix):
+        return (f"Relu_Fix_{'Active' if cert.active else 'Inactive'} {cert.x} {cert.y} "
+                f"({hol_bound(cert.bound)}) " + hol_list(hol_rat(w) for w in cert.weights) +
                 f"\n{indent}(" + hol_certificate(cert.child, indent + "  ") + ")")
     return (f"Relu_Split {cert.x} {cert.y}\n{indent}(" + hol_certificate(cert.active, indent + "  ") +
             f")\n{indent}(" + hol_certificate(cert.inactive, indent + "  ") + ")")

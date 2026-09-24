@@ -1,0 +1,6 @@
+Engine::processInputQuery(input, false): true
+Engine::solve(10): true; exit code SAT
+Proof production: true; preprocessing: false; DeepSoI: false
+Processed variables: 8; rows: 3
+Native ReluConstraint::transformToUseAuxVariables: one calls; 4 -> 5 variables.
+Captured the native assignment of all 8 processed variables; it is candidate witness data, not a proof.

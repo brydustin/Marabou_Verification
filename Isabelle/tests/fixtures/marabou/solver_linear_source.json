@@ -1,0 +1,10 @@
+{
+  "format": "marabou-source-query-v1",
+  "variables": 2,
+  "equations": [
+    {"type": "EQ", "addends": [{"var": 0, "val": 1}, {"var": 1, "val": -1}], "scalar": 0}
+  ],
+  "upperBounds": [0.25, 2],
+  "lowerBounds": [-2, 0.5],
+  "constraints": []
+}

@@ -6,6 +6,10 @@ session Marabou_Verification = HOL +
     Linear_Constraints
     ReLU_Constraints
     Query_Semantics
+    Tableau_Auxiliary
+    Tableau_State
+    Tableau_Assignment_Update
+    Inequality_Auxiliary
     ReLU_Splitting
     Marabou_Examples
     Rational_Linear_Constraints
@@ -14,7 +18,18 @@ session Marabou_Verification = HOL +
     Rational_Linear_Implication
     ReLU_Bound_Propagation
     ReLU_Aux_Bound_Propagation
+    ReLU_Output_Bound_Propagation
+    ReLU_Aux_Lower_Bound_Propagation
+    ReLU_Phase_Fixing
+    ReLU_Auxiliary
     Rational_Proof_Trees
+    Rational_Tableau_Auxiliary
+    Rational_Inequality_Auxiliary
+    Tableau_Auxiliary_Sequence
+    Rational_ReLU_Auxiliary
+    ReLU_Auxiliary_Sequence
+    Rational_Assignment
+    Inequality_Auxiliary_Sequence
     Rational_Proof_Tree_Examples
     Rational_Linear_Implication_Examples
     ReLU_Bound_Examples
@@ -33,5 +48,61 @@ session Marabou_Verification = HOL +
     Imported_Marabou_Solver_Relu_Aux
     Imported_Marabou_Solver_Relu_Aux_Active
     ReLU_Aux_Bound_Examples
+    Imported_Marabou_Solver_Relu_Split
+    Solver_ReLU_Split_Examples
+    Tableau_Auxiliary_Examples
+    Tableau_Auxiliary_Sequence_Examples
+    Imported_Marabou_Source_Linear
+    Imported_Marabou_Source_Relu
+    Imported_Marabou_Source_Relu_Aux
+    Imported_Marabou_Source_Relu_Aux_Active
+    Imported_Marabou_Source_Relu_Split
+    ReLU_Auxiliary_Examples
+    Imported_Marabou_Native_Relu_Intro
+    Imported_Marabou_Native_Relu_Sequence
+    ReLU_Auxiliary_Sequence_Examples
+    Imported_Marabou_Native_Relu_Chain
+    ReLU_Output_Bound_Examples
+    Imported_Marabou_Solver_Relu_Aux_Inactive
+    Imported_Marabou_Source_Relu_Aux_Inactive
+    ReLU_Aux_Lower_Bound_Examples
+    ReLU_Phase_Fixing_Examples
+    Preprocessing_Projection
+    Preprocessing_Projection_Examples
+    Imported_Marabou_Native_Relu_Sat
+    Rational_Assignment_Examples
+    Exact_Query_Format
+    Bounded_Inequality_Auxiliary
+    Bounded_Inequality_Examples
+    Imported_Marabou_Prepared_Inequality_Relu_Unsat
+    Imported_Marabou_Example_Inequality_Relu_Unsat
+    Imported_Marabou_Prepared_Inequality_Relu_Sat
+    Imported_Marabou_Example_Inequality_Relu_Sat
+    Imported_Marabou_Prepared_Inequality_Linear_Sat
+    Imported_Marabou_Example_Inequality_Linear_Sat
+    Imported_Marabou_File_Phase_Active_Unsat
+    Imported_Marabou_Example_Phase_Active_Unsat
+    Imported_Marabou_File_Phase_Inactive_Unsat
+    Imported_Marabou_Example_Phase_Inactive_Unsat
+    Imported_Marabou_File_Phase_Chain_Unsat
+    Imported_Marabou_Example_Phase_Chain_Unsat
+    Imported_Marabou_File_Phase_Fixed_Sat
+    Imported_Marabou_Example_Phase_Fixed_Sat
+    Imported_Marabou_Preprocessed_Split_Unsat
+    Imported_Marabou_Example_Preprocess_Split_Unsat
+    Imported_Marabou_Preprocessed_Eliminate_Unsat
+    Imported_Marabou_Example_Preprocess_Eliminate_Unsat
+    Imported_Marabou_Preprocessed_Inequality_Unsat
+    Imported_Marabou_Example_Preprocess_Inequality_Unsat
+    Imported_Marabou_Preprocessed_Mixed_Sat
+    Imported_Marabou_Example_Preprocess_Mixed_Sat
+    Exact_Query_Format_Examples
+    Imported_Marabou_Exact_Texts
+    Imported_Marabou_Example_Relu_Chain_Unsat
+    Imported_Marabou_Example_Relu_Sat
+    Imported_Marabou_Example_Linear_Unsat
+    Inequality_Auxiliary_Examples
   export_files (in generated) [2] "*:code/Marabou_Linear_Leaf.ML"
     "*:code/Marabou_Proof_Checker.ML"
+    "*:code/Marabou_Assignment_Checker.ML"
+    "*:code/Marabou_Inequality_Preprocessor.ML"

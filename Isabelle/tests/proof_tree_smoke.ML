@@ -138,4 +138,133 @@ val _ = expect "auxiliary propagation needs ReLU membership" false
   (Tree.check_certificate
     (Tree.make [auxiliaryEquation] [Tree.RatLower (x, rat (~1) 2), Tree.RatLower (a, rat 3 4)] [])
     (auxCert (rat (~1) 2) (rat 1 2)));
-val _ = print "35 exported SML proof-tree tests passed\n";
+fun outputQuery lower minimumAux = Tree.make [auxiliaryEquation]
+  [Tree.RatLower (y, lower), Tree.RatLower (a, minimumAux)] [Tree.ReLU (x, y)];
+fun outputCert lower upper = Tree.Relu_Output_Aux_Upper
+  (x, y, a, lower, upper, pos, neg, leaf [0, 0, 1, 0, 1]);
+val _ = expect "positive output lower forces zero auxiliary" true
+  (Tree.check_certificate (outputQuery (rat 1 2) (rat 1 4)) (outputCert (rat 1 2) (integer 0)));
+val _ = expect "output zero does not fix the active phase" false
+  (Tree.check_certificate (outputQuery (integer 0) (integer 1)) (outputCert (integer 0) (integer 0)));
+val tiny = rat 1 100000000000000000000;
+val _ = expect "strictly positive exact output premise" true
+  (Tree.check_certificate (outputQuery tiny (rat 1 4)) (outputCert tiny (integer 0)));
+val _ = expect "negative exact output premise" false
+  (Tree.check_certificate (outputQuery (rat (~1) 100000000000000000000) (rat 1 4))
+    (outputCert (rat (~1) 100000000000000000000) (integer 0)));
+val _ = expect "weaker output-based auxiliary cap" true
+  (Tree.check_certificate (outputQuery (rat 1 2) (rat 1 4)) (outputCert (rat 1 2) (rat 1 8)));
+val _ = expect "negative auxiliary cap rejected" false
+  (Tree.check_relu_output_aux_upper_bound (outputQuery (rat 1 2) (integer 0))
+    x y a (rat 1 2) (rat (~1) 100000000000000000000) pos neg);
+val _ = expect "input bound cannot substitute for output bound" false
+  (Tree.check_certificate (auxQuery (rat 1 2) (rat 1 4)) (outputCert (rat 1 2) (integer 0)));
+val _ = expect "output auxiliary equation needs positive witness" false
+  (Tree.check_relu_output_aux_upper_bound (outputQuery (rat 1 2) (rat 1 4))
+    x y a (rat 1 2) (integer 0) (map integer [0, 0, 0, 0]) neg);
+val _ = expect "output auxiliary equation needs negative witness" false
+  (Tree.check_relu_output_aux_upper_bound (outputQuery (rat 1 2) (rat 1 4))
+    x y a (rat 1 2) (integer 0) pos (map integer [0, 0, 0, 0]));
+val _ = expect "output rule cannot trust auxiliary metadata" false
+  (Tree.check_certificate
+    (Tree.make [] [Tree.RatLower (y, rat 1 2), Tree.RatLower (a, rat 1 4)] [Tree.ReLU (x, y)])
+    (outputCert (rat 1 2) (integer 0)));
+val _ = expect "positive output alone is satisfiable" false
+  (Tree.check_certificate (outputQuery (rat 1 2) (integer 0)) (outputCert (rat 1 2) (integer 0)));
+val _ = expect "output rule needs a checked continuation" false
+  (Tree.check_certificate (outputQuery (rat 1 2) (rat 1 4))
+    (Tree.Relu_Output_Aux_Upper (x, y, a, rat 1 2, integer 0, pos, neg, leaf [0, 0, 0, 0, 0])));
+fun auxLowerQuery lower minimumOutput = Tree.make [auxiliaryEquation]
+  [Tree.RatLower (a, lower), Tree.RatLower (y, minimumOutput)] [Tree.ReLU (x, y)];
+fun auxLowerCert lower upper = Tree.Relu_Aux_Lower_Output_Upper
+  (x, y, a, lower, upper, pos, neg, leaf [0, 0, 1, 0, 1]);
+val _ = expect "positive auxiliary lower forces zero output" true
+  (Tree.check_certificate (auxLowerQuery (rat 1 2) (rat 1 4)) (auxLowerCert (rat 1 2) (integer 0)));
+val _ = expect "zero auxiliary does not fix the inactive phase" false
+  (Tree.check_certificate (auxLowerQuery (integer 0) (integer 1)) (auxLowerCert (integer 0) (integer 0)));
+val _ = expect "strictly positive exact auxiliary premise" true
+  (Tree.check_certificate (auxLowerQuery tiny (rat 1 4)) (auxLowerCert tiny (integer 0)));
+val _ = expect "negative exact auxiliary premise" false
+  (Tree.check_certificate (auxLowerQuery (rat (~1) 100000000000000000000) (rat 1 4))
+    (auxLowerCert (rat (~1) 100000000000000000000) (integer 0)));
+val _ = expect "weaker auxiliary-based output cap" true
+  (Tree.check_certificate (auxLowerQuery (rat 1 2) (rat 1 4)) (auxLowerCert (rat 1 2) (rat 1 8)));
+val _ = expect "insufficient auxiliary-based output cap" false
+  (Tree.check_certificate (auxLowerQuery (rat 1 2) (rat 1 4)) (auxLowerCert (rat 1 2) (rat 1 4)));
+val _ = expect "negative output cap rejected" false
+  (Tree.check_relu_aux_lower_output_upper_bound (auxLowerQuery (rat 1 2) (integer 0))
+    x y a (rat 1 2) (rat (~1) 100000000000000000000) pos neg);
+val _ = expect "output bound cannot substitute for auxiliary bound" false
+  (Tree.check_certificate (outputQuery (rat 1 2) (integer 0)) (auxLowerCert (rat 1 2) (integer 0)));
+val _ = expect "input bound cannot substitute for auxiliary bound" false
+  (Tree.check_certificate (auxQuery (rat 1 2) (integer 0)) (auxLowerCert (rat 1 2) (integer 0)));
+val _ = expect "auxiliary lower equation needs positive witness" false
+  (Tree.check_relu_aux_lower_output_upper_bound (auxLowerQuery (rat 1 2) (rat 1 4))
+    x y a (rat 1 2) (integer 0) (map integer [0, 0, 0, 0]) neg);
+val _ = expect "auxiliary lower equation needs negative witness" false
+  (Tree.check_relu_aux_lower_output_upper_bound (auxLowerQuery (rat 1 2) (rat 1 4))
+    x y a (rat 1 2) (integer 0) pos (map integer [0, 0, 0, 0]));
+val _ = expect "auxiliary lower rule cannot trust auxiliary metadata" false
+  (Tree.check_certificate
+    (Tree.make [] [Tree.RatLower (a, rat 1 2), Tree.RatLower (y, rat 1 4)] [Tree.ReLU (x, y)])
+    (auxLowerCert (rat 1 2) (integer 0)));
+val _ = expect "positive auxiliary alone is satisfiable" false
+  (Tree.check_certificate (auxLowerQuery (rat 1 2) (integer 0)) (auxLowerCert (rat 1 2) (integer 0)));
+val _ = expect "auxiliary lower rule needs a checked continuation" false
+  (Tree.check_certificate (auxLowerQuery (rat 1 2) (rat 1 4))
+    (Tree.Relu_Aux_Lower_Output_Upper (x, y, a, rat 1 2, integer 0, pos, neg, leaf [0, 0, 0, 0, 0])));
+val _ = expect "auxiliary lower rule needs ReLU membership" false
+  (Tree.check_certificate
+    (Tree.make [auxiliaryEquation] [Tree.RatLower (a, rat 1 2), Tree.RatLower (y, rat 1 4)] [])
+    (auxLowerCert (rat 1 2) (integer 0)));
+(* Phase fixing: weights index -y<=0, x-y<=0, then the query's rows. *)
+val activeByOutput = Tree.make []
+  [Tree.RatLower (x, integer (~1)), Tree.RatUpper (x, integer 1),
+   Tree.RatLower (y, rat 3 2), Tree.RatUpper (y, integer 2)] [Tree.ReLU (x, y)];
+fun fixActive bound weights child = Tree.Relu_Fix_Active (x, y, bound, map integer weights, child);
+fun fixInactive bound weights child = Tree.Relu_Fix_Inactive (x, y, bound, map integer weights, child);
+val _ = expect "positive output fixes the active phase" true
+  (Tree.check_certificate activeByOutput
+    (fixActive (Tree.RatLower (y, rat 3 2)) [0, 0, 0, 0, 1, 0] (leaf [1, 0, 0, 0, 1, 1, 0])));
+val _ = expect "fixed phase needs a checked continuation" false
+  (Tree.check_certificate activeByOutput
+    (fixActive (Tree.RatLower (y, rat 3 2)) [0, 0, 0, 0, 1, 0] (leaf [0, 0, 0, 0, 1, 1, 0])));
+val _ = expect "zero output lower bound does not fix the phase" false
+  (Tree.check_relu_fixed_active activeByOutput x y (Tree.RatLower (y, integer 0))
+    (map integer [1, 0, 0, 0, 0, 0]));
+val _ = expect "tiny negative input lower bound does not fix the phase" false
+  (Tree.check_relu_fixed_active activeByOutput x y (Tree.RatLower (x, rat (~1) 1000000000000))
+    (map integer [0, 0, 1, 0, 0, 0]));
+val _ = expect "unimplied phase premise" false
+  (Tree.check_relu_fixed_active activeByOutput x y (Tree.RatLower (y, integer 2))
+    (map integer [0, 0, 0, 0, 1, 0]));
+val auxQuery2 = Tree.make
+  [Tree.RatEq (Tree.RatExpr (integer 0, [(integer 1, y), (integer (~1), x), (integer (~1), nat 2)]), integer 0)]
+  [Tree.RatLower (x, integer (~1)), Tree.RatUpper (x, integer 2), Tree.RatLower (y, integer (~1)),
+   Tree.RatUpper (y, integer 2), Tree.RatLower (nat 2, integer 0), Tree.RatUpper (nat 2, integer 0)]
+  [Tree.ReLU (x, y)];
+val _ = expect "hull row y>=0 proves the active input bound" true
+  (Tree.check_relu_fixed_active auxQuery2 x y (Tree.RatLower (x, integer 0))
+    (map integer [1, 0, 1, 0, 0, 0, 0, 0, 0, 1]));
+val inactiveByInput = Tree.make
+  [Tree.RatEq (Tree.RatExpr (integer 0, [(integer 1, y), (integer (~1), nat 2)]), integer 0)]
+  [Tree.RatLower (x, integer (~2)), Tree.RatUpper (x, rat (~1) 2), Tree.RatLower (y, integer 0),
+   Tree.RatUpper (y, integer 2), Tree.RatLower (nat 2, rat 1 4), Tree.RatUpper (nat 2, integer 2)]
+  [Tree.ReLU (x, y)];
+val _ = expect "negative input upper bound fixes the inactive phase" true
+  (Tree.check_certificate inactiveByInput
+    (fixInactive (Tree.RatUpper (x, rat (~1) 2)) [0, 0, 0, 0, 0, 1, 0, 0, 0, 0]
+      (leaf [1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0])));
+val _ = expect "lower bound cannot fix the inactive phase" false
+  (Tree.check_relu_fixed_inactive inactiveByInput x y (Tree.RatLower (x, integer (~2)))
+    (map integer [0, 0, 0, 0, 1, 0, 0, 0, 0, 0]));
+val _ = expect "fixed inactive phase needs ReLU membership" false
+  (Tree.check_relu_fixed_inactive inactiveByInput y x (Tree.RatUpper (x, rat (~1) 2))
+    (map integer [0, 0, 0, 0, 0, 1, 0, 0, 0, 0]));
+val tinyPositive = Tree.make []
+  [Tree.RatLower (x, integer (~1)), Tree.RatUpper (x, rat 1 1000000000000),
+   Tree.RatLower (y, rat 1 1000000000000), Tree.RatUpper (y, integer 1)] [Tree.ReLU (x, y)];
+val _ = expect "tiny positive input upper bound does not fix the inactive phase" false
+  (Tree.check_certificate tinyPositive
+    (fixInactive (Tree.RatUpper (x, rat 1 1000000000000)) [0, 0, 0, 1, 0, 0] (leaf [1, 0, 0, 0, 0, 1, 0])));
+val _ = print "72 exported SML proof-tree tests passed\n";

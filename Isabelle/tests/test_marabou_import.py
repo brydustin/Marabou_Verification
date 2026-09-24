@@ -22,6 +22,7 @@ FIXTURE_TYPES = {
     "explained_negative": adapter.LinearBound, "explained_positive": adapter.LinearBound,
     "solver_linear": adapter.Leaf, "solver_relu": adapter.LinearBound,
     "solver_relu_aux": adapter.LinearBound, "solver_relu_aux_active": adapter.LinearBound,
+    "solver_relu_split": adapter.Split, "solver_relu_aux_inactive": adapter.LinearBound,
 }
 
 
@@ -72,12 +73,16 @@ class ImportTests(unittest.TestCase):
             adapter.reconstruct(query, proof)
 
     def test_solver_capture_provenance(self):
-        for scenario in ("linear", "relu", "relu_aux", "relu_aux_active"):
+        for scenario in ("linear", "relu", "relu_aux", "relu_aux_active", "relu_aux_inactive",
+                         "relu_split", "relu_intro",
+                         "relu_sequence", "relu_chain"):
             with self.subTest(scenario=scenario):
                 stem = "solver_" + scenario
                 provenance = json.loads((FIXTURES / (stem + "_provenance.json")).read_text())
                 self.assertEqual(provenance["scenario"], scenario)
                 for key, suffix in (
+                    ("source_query_sha256", "_source.json"),
+                    ("introduction_list_sha256", "_steps.json"),
                     ("processed_query_sha256", "_query.json"),
                     ("certificate_sha256", ".json"),
                     ("run_report_sha256", "_run.json"),
@@ -93,6 +98,8 @@ class ImportTests(unittest.TestCase):
                                  hashlib.sha256((ISABELLE / "tools/capture_marabou_solver.py").read_bytes()).hexdigest())
                 self.assertEqual(provenance["importer_sha256"],
                                  hashlib.sha256((ISABELLE / "tools/import_marabou_json.py").read_bytes()).hexdigest())
+                self.assertEqual(provenance["source_importer_sha256"],
+                                 hashlib.sha256((ISABELLE / "tools/import_marabou_source.py").read_bytes()).hexdigest())
                 self.assertEqual(provenance["cmake_sha256"],
                                  hashlib.sha256((ISABELLE / "tools/solver_capture/CMakeLists.txt").read_bytes()).hexdigest())
 
@@ -379,6 +386,116 @@ class ImportTests(unittest.TestCase):
         query, proof = self.auxiliary_branch_fixture()
         proof["proof"]["children"][0]["lemmas"] = []
         with self.assertRaisesRegex(adapter.ImportFailure, "exact constant"):
+            adapter.reconstruct(query, proof)
+
+    def test_solver_split_is_native_search_with_two_closed_children(self):
+        report = json.loads((FIXTURES / "solver_relu_split_run.json").read_text())
+        for field in ("initialization_succeeded", "proof_production", "relu_phase_unfixed_before_solve",
+                      "initial_snapshot_matches_tableau_and_ground_bounds"):
+            self.assertTrue(report[field], field)
+        for field in ("preprocessing", "deepsoi", "solve_return"):
+            self.assertFalse(report[field], field)
+        for field, value in (("constraint_violation_threshold", 1), ("search_splits", 1),
+                             ("max_decision_level", 1), ("root_children", 2),
+                             ("explained_leaves", 2), ("delegated_leaves", 0),
+                             ("plc_lemmas_before_solve", 0), ("plc_lemmas_after_solve", 0)):
+            self.assertEqual(report[field], value, field)
+        self.assertEqual(report["exit_code"], "UNSAT")
+        self.assertGreater(report["search_pops"], 0)
+        self.assertGreater(report["tableau_pivots"], 0)
+        _, proof = fixture("solver_relu_split")
+        self.assertEqual(set(proof["proof"]), {"children"})
+        for child in proof["proof"]["children"]:
+            self.assertEqual(set(child), {"split", "contradiction"})
+
+    def test_solver_split_each_canonical_child_has_exact_positive_margin(self):
+        instance, cert = adapter.reconstruct(*fixture("solver_relu_split"))
+        self.assertEqual((cert.x, cert.y), (0, 1))
+        for active, child in ((True, cert.active), (False, cert.inactive)):
+            with self.subTest(active=active):
+                self.assertIsInstance(child, adapter.Leaf)
+                query = instance.query.split(cert.x, cert.y, active)
+                self.assertEqual(adapter.weighted_vector(query, instance.n, child.weights),
+                                 [Fraction(1, 2)] + [0] * instance.n)
+
+    def test_solver_split_child_order_does_not_change_reconstruction(self):
+        query, proof = fixture("solver_relu_split")
+        expected = adapter.reconstruct(query, proof)
+        proof["proof"]["children"].reverse()
+        self.assertEqual(adapter.reconstruct(query, proof), expected)
+
+    def test_solver_split_cannot_omit_either_child(self):
+        for i in (0, 1):
+            query, proof = fixture("solver_relu_split")
+            proof["proof"]["children"].pop(i)
+            with self.subTest(child=i), self.assertRaises(adapter.ImportFailure):
+                adapter.reconstruct(query, proof)
+
+    def test_solver_split_good_sibling_cannot_hide_bad_leaf(self):
+        for i in (0, 1):
+            for weight in (0, -1):
+                query, proof = fixture("solver_relu_split")
+                proof["proof"]["children"][i]["contradiction"][0]["val"] = weight
+                with self.subTest(child=i, weight=weight), self.assertRaises(adapter.ImportFailure):
+                    adapter.reconstruct(query, proof)
+
+    def test_solver_split_cannot_exchange_leaf_evidence(self):
+        query, proof = fixture("solver_relu_split")
+        left, right = proof["proof"]["children"]
+        left["contradiction"], right["contradiction"] = right["contradiction"], left["contradiction"]
+        with self.assertRaises(adapter.ImportFailure):
+            adapter.reconstruct(query, proof)
+
+    def test_solver_split_cannot_duplicate_one_phase(self):
+        for i in (0, 1):
+            query, proof = fixture("solver_relu_split")
+            proof["proof"]["children"][1 - i] = copy.deepcopy(proof["proof"]["children"][i])
+            with self.subTest(child=i), self.assertRaises(adapter.ImportFailure):
+                adapter.reconstruct(query, proof)
+
+    def test_solver_split_cannot_strengthen_phase_assumptions(self):
+        for i in (0, 1):
+            query, proof = fixture("solver_relu_split")
+            proof["proof"]["children"][i]["split"][1]["val"] = Fraction(-1, 10**20)
+            with self.subTest(child=i), self.assertRaises(adapter.ImportFailure):
+                adapter.reconstruct(query, proof)
+
+    def assert_exact_model(self, query, values):
+        instance = adapter.parse_instance(query)
+        self.assertEqual(len(values), instance.n)
+        for equation in instance.query.equations:
+            self.assertEqual(equation.constant + sum(a * values[x] for a, x in equation.terms), 0)
+        for bound in instance.query.bounds:
+            if bound.kind == "L":
+                self.assertLessEqual(bound.value, values[bound.variable])
+            else:
+                self.assertLessEqual(values[bound.variable], bound.value)
+        for x, y in instance.query.relus:
+            self.assertEqual(values[y], max(0, values[x]))
+
+    def test_solver_split_relaxing_either_phase_yields_a_model_and_rejection(self):
+        half, quarter = Fraction(1, 2), Fraction(1, 4)
+        for active in (False, True):
+            query, proof = fixture("solver_relu_split")
+            fixed = (11, 12) if active else (9, 10)
+            for obj in (query, proof):
+                for i in fixed:
+                    obj["lowerBounds"][i] = obj["upperBounds"][i] = 0
+            values = ([half, half, 0, 0, 0, quarter, quarter, 0, 0, quarter, quarter, 0, 0, 0]
+                      if active else
+                      [-half, 0, half, 0, 0, 0, 0, quarter, quarter, 0, 0, quarter, quarter, 0])
+            with self.subTest(active=active):
+                self.assert_exact_model(query, values)
+                with self.assertRaisesRegex(adapter.ImportFailure, "exact constant"):
+                    adapter.reconstruct(query, proof)
+
+    def test_solver_split_auxiliary_phase_bound_needs_its_tableau_premise(self):
+        query, proof = fixture("solver_relu_split")
+        query["lowerBounds"][13] = proof["lowerBounds"][13] = -1
+        # Now f=b=1/2, a=1/2, h4=-1/2 is a model: metadata cannot imply a<=0.
+        half, quarter = Fraction(1, 2), Fraction(1, 4)
+        self.assert_exact_model(query, [half, half, half, 0, 0] + [quarter] * 8 + [-half])
+        with self.assertRaisesRegex(adapter.ImportFailure, "cannot reconstruct"):
             adapter.reconstruct(query, proof)
 
     def test_bad_numeric_types(self):
