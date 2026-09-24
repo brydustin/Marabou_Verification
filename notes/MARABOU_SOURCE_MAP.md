@@ -131,6 +131,37 @@ Inspected for [TABLEAU_INITIALIZATION.md](TABLEAU_INITIALIZATION.md); all in
   exist before that call, introduced by the harness or by native
   preprocessing, so it adds no rows; `snapshot_steps` checks the row count.
 
+## Bound application details that affect the model
+
+Inspected for [TABLEAU_BOUND_UPDATE.md](TABLEAU_BOUND_UPDATE.md); all in
+`src/engine/`.
+
+* `BoundManager::setLowerBound` (BoundManager.cpp 172–184) changes a bound
+  only if the value is strictly greater, by an exact comparison. It marks
+  the bound in `_tightenedLower` and, if the variable's bounds now cross,
+  calls `recordInconsistentBound` (161–170). That records only the first
+  crossing. The crossing test `consistentBounds(variable)` uses
+  `FloatUtils::gte`. The upper bound is symmetric.
+* `tightenLowerBound` (145–151, and 315–328 with a row explanation) then
+  calls `Tableau::updateVariableToComplyWithLowerBoundUpdate` (Tableau.cpp
+  1785–1805). A nonbasic below the new bound is moved onto it by
+  `setNonBasicAssignment(…, true)`. A basic has its status recomputed, and
+  the cost function is invalidated if the status changed.
+* `propagateTightenings` (268–284) notifies watchers of every pending bound
+  in variable order and clears the flags.
+* `Engine::solve` throws `InfeasibleQueryException` when
+  `Tableau::allBoundsValid` (the `_consistentBounds` flag) fails
+  (Engine.cpp 313–317). `explainSimplexFailure` starts from
+  `getInconsistentVariable`.
+* `Engine::applySplit` (1994–2141) resets the explanation of each split
+  bound. With proofs, it records the bound with
+  `GroundBoundManager::addGroundBound(…, isPhaseFixing = true)` (2114, 2128)
+  when it is stronger, then tightens it.
+* `RowBoundTightener::tightenOnSingleInvertedBasisRow` (RowBoundTightener.cpp
+  237–402) bounds a row's basic variable, then each nonbasic with a
+  coefficient of at least 0.01. It subtracts or adds 10⁻⁶ and throws on a
+  crossing.
+
 ## Existing proof evidence is not exact checking
 
 `Checker::checkContradiction` uses `double` row combinations and

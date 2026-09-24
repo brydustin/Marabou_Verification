@@ -419,3 +419,22 @@ Next (per the audit): bound application and local conflicts, then native
 auxiliary-form ReLU splits and one search frame. The HOL solver could then
 refute queries that need case splits. At the user's request, milestone 26
 was then committed and pushed as its own commit.
+
+2026-09-24. The user asked for the bound-application and local-conflict
+milestone (audit milestone 3).
+
+Milestone 27 complete:
+* `Tableau_Bound_Update`: the native bound store and compliance update,
+  pending propagation and first-conflict recording, branches with
+  decisions, and exact row-derived bounds;
+* `Tableau_Bound_Update_Examples`: `linear_unsat.mqx` refuted by a root row
+  conflict, a split decision versus the same bound passed off as derived,
+  and a branch-only refutation.
+
+Pure HOL; no tool or fixture changed. See
+[TABLEAU_BOUND_UPDATE.md](TABLEAU_BOUND_UPDATE.md).
+
+Next (audit milestones 4 and 5): native auxiliary-form ReLU splits as pairs
+of decisions on this state, then one search frame closed by two refuted
+children, with bounds restored. At the user's request, milestone 27 was
+then committed and pushed as its own commit.

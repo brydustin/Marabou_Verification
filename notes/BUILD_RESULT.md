@@ -2843,3 +2843,72 @@ certificate or the harness. The native basis records support a
 correspondence claim: the HOL selection matches Marabou's on these 20 runs.
 They play no part in soundness. ReLUs are relaxed, not split. Inequalities
 must be converted first, and termination is not proved.
+
+## Twenty-seventh milestone: bound application and local conflicts
+
+Completed on 2026-09-24. See [TABLEAU_BOUND_UPDATE.md](TABLEAU_BOUND_UPDATE.md).
+This is milestone 3 of the audit's solver-calculus roadmap. It is pure HOL
+work: no harness, importer or fixture changed, and no native rerun was
+needed.
+
+### Work done
+
+* [Tableau_Bound_Update.thy](../Isabelle/Tableau_Bound_Update.thy):
+  * the native bound store: `set_bound` and `tighten_bound` for both sides,
+    the tableau's compliance update, pending flags, `propagate_tightenings`
+    and first-conflict recording;
+  * `tighten_weaker_noop`, `tighten_bounded_models`, `tighten_invariant` and
+    `tighten_basic_value`;
+  * the pending and propagation theorems;
+  * `tighten_conflict_sound`, `tighten_conflict_complete`,
+    `conflict_no_bounded_model` and `all_bounds_valid_iff`.
+* Branches with a decision list:
+  * `apply_derived_branch`, `apply_decision_branch` and
+    `undeclared_decision_breaks_branch`;
+  * `branch_conflict_refutes`, `root_conflict_unsatisfiable` and
+    `branch_simplex_infeasible`.
+* Exact row-derived bounds (`row_rules`, `row_rule_entailed`,
+  `apply_rules_sound`) and an `export_code … checking SML` check.
+* [Tableau_Bound_Update_Examples.thy](../Isabelle/Tableau_Bound_Update_Examples.thy):
+  * `examples/linear_unsat.mqx` refuted by a root row-bound conflict,
+    matching how Marabou's own run ended (0 simplex steps, 0 pivots, 1
+    explicit-basis tightening call);
+  * a split decision and its effects on values and pending bounds;
+  * the same split applied as if derived, breaking the branch invariant;
+  * a conflict that refutes only its branch;
+  * a weaker no-op and a basic's status change.
+
+During development, several first-draft proofs needed repair. The causes
+were a `have term:` label (`term` is a keyword), `simp` facing a negated
+conjunction, and a positional instantiation across a two-statement lemma.
+All were fixed before the final build.
+
+### Validation
+
+```text
+$ isabelle build -c -e -D Isabelle        (112 theories)
+Finished Marabou_Verification (0:04:12 elapsed time, 0:17:28 cpu time, factor 4.15)
+0:04:18 elapsed time, 0:17:28 cpu time, factor 4.06     exit 0
+
+8 exported SML checker tests passed
+72 exported SML proof-tree tests passed
+11 exported SML assignment tests passed
+16 exported SML inequality auxiliary tests passed      (all exit 0)
+
+$ python3 -m unittest discover -s Isabelle/tests -p 'test_*.py'
+Ran 312 tests in 4.111s
+OK
+```
+
+The `build_log` Error/Warning filter was empty, and no forbidden proof or
+axiom token occurs in any project theory. All 678 local links in 40 Markdown files resolve and `git diff --check` is
+clean. The upstream checkouts are clean at their pinned revisions.
+[PROJECT_THEORY_INVENTORY.md](PROJECT_THEORY_INVENTORY.md) lists the 35
+theories added after the audit snapshot.
+
+### Assurance
+
+These are exact abstractions of the native bound code: every tolerance is
+zero, bound explanations are replaced by the branch invariant and
+entailment, and the C++ is not verified. The query-level refutation
+`linear_unsat_file_unsatisfiable_by_bounds` relies only on the HOL kernel.

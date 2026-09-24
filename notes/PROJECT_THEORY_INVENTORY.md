@@ -630,7 +630,7 @@ Results: `imported_source_term_order`, `imported_steps_match_query`, `imported_c
 
 ## Theories added after the audit snapshot
 
-The sections above are the audit-time snapshot of 77 theories. The following 33 theories were added later, in session order; the entries are extracted from their sources in the same format.
+The sections above are the audit-time snapshot of 77 theories. The following 35 theories were added later, in session order; the entries are extracted from their sources in the same format.
 
 ### [Tableau_State](../Isabelle/Tableau_State.thy)
 
@@ -719,6 +719,22 @@ Imports: Tableau_Initial_Basis Rational_Linear_Constraints.
 Objects: `solver_linear_source`, `solver_relu_source`, `solver_relu_aux_source`, `solver_relu_aux_active_source`, `solver_relu_aux_inactive_source`, `solver_relu_split_source`, `solver_relu_intro_source`, `solver_relu_sequence_source`, `solver_relu_chain_source`, `solver_relu_sat_source`, `file_inequality_relu_unsat_source`, `file_inequality_relu_sat_source`, `file_inequality_linear_sat_source`, `file_phase_active_unsat_source`, `file_phase_inactive_unsat_source`, `file_phase_chain_unsat_source`, `file_phase_fixed_sat_source`, `file_preprocess_split_unsat_source`, `file_preprocess_eliminate_unsat_source`, `file_preprocess_mixed_sat_source`.
 
 Results: `solver_linear_native_initial_basis`, `solver_relu_native_initial_basis`, `solver_relu_aux_native_initial_basis`, `solver_relu_aux_active_native_initial_basis`, `solver_relu_aux_inactive_native_initial_basis`, `solver_relu_split_native_initial_basis`, `solver_relu_intro_native_initial_basis`, `solver_relu_sequence_native_initial_basis`, `solver_relu_chain_native_initial_basis`, `solver_relu_sat_native_initial_basis`, `file_inequality_relu_unsat_native_initial_basis`, `file_inequality_relu_sat_native_initial_basis`, `file_inequality_linear_sat_native_initial_basis`, `file_phase_active_unsat_native_initial_basis`, `file_phase_inactive_unsat_native_initial_basis`, `file_phase_chain_unsat_native_initial_basis`, `file_phase_fixed_sat_native_initial_basis`, `file_preprocess_split_unsat_native_initial_basis`, `file_preprocess_eliminate_unsat_native_initial_basis`, `file_preprocess_mixed_sat_native_initial_basis`.
+
+### [Tableau_Bound_Update](../Isabelle/Tableau_Bound_Update.thy)
+
+Imports: Tableau_Initial_Basis.
+
+Objects: `bound_side`, `bound_store`, `bound_holds`, `stronger`, `with_bound`, `crossed`, `carrier`, `mark_pending`, `set_bound`, `comply`, `tighten_bound`, `propagate_tightenings`, `conflict_sound`, `conflict_complete`, `branch`, `decision_models`, `branch_of`, `entailed`, `apply_derived`, `apply_decision`, `root_branch`, `term_lower`, `term_upper`, `row_lower_bound`, `row_upper_bound`, `solved_bounds`, `row_rule`, `rule_valid`, `rule_bound`, `apply_rules`, `row_rules`.
+
+Results: `with_bound_simps`, `comply_simps`, `bounded_models_cong`, `tighten_weaker`, `tighten_stronger`, `tighten_store_tableau`, `tighten_structure`, `stronger_implies_old`, `tighten_bounded_models`, `tighten_weaker_noop`, `tighten_invariant`, `tighten_basic_value`, `tighten_pending`, `propagated_bounds_hold`, `propagate_tightenings_exact`, `tighten_bounds_monotone`, `crossed_persists`, `tighten_conflict`, `tighten_conflict_sound`, `tighten_conflict_complete`, `conflict_no_bounded_model`, `all_bounds_valid_iff`, `root_branch_of`, `root_branch_conflicts`, `tighten_bounded_models_subset`, `apply_derived_branch`, `apply_decision_branch`, `undeclared_decision_breaks_branch`, `branch_conflict_refutes`, `root_conflict_unsatisfiable`, `branch_simplex_infeasible`, `eval_terms_within`, `row_bounds_within`, `bounded_model_facts`, `row_rule_entailed`, `rule_target_in_carrier`, `apply_rules_sound`.
+
+### [Tableau_Bound_Update_Examples](../Isabelle/Tableau_Bound_Update_Examples.thy)
+
+Imports: Tableau_Bound_Update Tableau_Pivot_Examples Imported_Marabou_Example_Linear_Unsat.
+
+Objects: `row_refutation`, `split_root`, `decided`, `decided_twice`.
+
+Results: `linear_unsat_row_conflict`, `linear_unsat_file_unsatisfiable_by_bounds`, `root_solution_below_split`, `split_not_entailed`, `decision_keeps_branch`, `split_as_derived_breaks_branch`, `decision_effects`, `second_decision_conflict`, `branch_refuted_not_root`, `weaker_proposal_is_noop`, `basic_tightening_status`.
 
 ### [ReLU_Phase_Fixing](../Isabelle/ReLU_Phase_Fixing.thy)
 
