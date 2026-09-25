@@ -2912,3 +2912,75 @@ These are exact abstractions of the native bound code: every tolerance is
 zero, bound explanations are replaced by the branch invariant and
 entailment, and the C++ is not verified. The query-level refutation
 `linear_unsat_file_unsatisfiable_by_bounds` relies only on the HOL kernel.
+
+## Twenty-eighth milestone: one native ReLU split
+
+Completed on 2026-09-24. See [TABLEAU_RELU_SPLIT.md](TABLEAU_RELU_SPLIT.md).
+This is milestone 4 of the audit's solver-calculus roadmap. It is pure HOL
+work: no harness, importer or fixture changed.
+
+### Work done
+
+* [Tableau_Relu_Split.thy](../Isabelle/Tableau_Relu_Split.thy):
+  * auxiliary-form ReLUs and the native case splits in native order;
+  * `relu_split_covers`, `zero_boundary_in_both`, `relu_split_refutes`,
+    `children_imply_relu` and `relu_nonneg_entailed`;
+  * ReLU-aware branches;
+  * well-formedness (`branch_ok`) through bound application, splits and row
+    tightening (`apply_rules_preserves`);
+  * branch refutation by conflict, row tightening or the simplex
+    (`branch_refuted_sound`), and `split_refutes_sound`;
+  * query-level theorems (`relu_root_empty_unsat`,
+    `root_split_children_unsat`, `solve_one_split_unsat`) and an
+    `export_code … checking SML` check.
+* [Tableau_Relu_Split_Examples.thy](../Isabelle/Tableau_Relu_Split_Examples.thy):
+  * a query that needs a split, refuted by `solve_one_split` under
+    `code_simp`;
+  * `examples/preprocess_split_unsat.mqx` refuted through the native split,
+    with both children refuted by `linarith`;
+  * the necessity of the auxiliary equation, the zero boundary, and
+    queries the split does not refute.
+
+During development:
+* The split constants were renamed `native_*`, because `ReLU_Splitting`
+  already defines `inactive_split`/`active_split`. The first rename missed
+  the `_def` facts.
+* A child build that tried to evaluate the solver on the 9-variable file by
+  `code_simp` ran past 20 minutes and was stopped. Profiling showed the
+  cost, recorded in the note's finding: decoding took about 24 s per
+  occurrence, and simplex steps grew about threefold per step. An
+  experimental per-exchange row table did not change that and was not kept.
+  The file is refuted through the native split theorem instead.
+* Branch refutation was restructured as nested conditionals, so evaluation
+  stops at the first test that succeeds.
+
+### Validation
+
+```text
+$ isabelle build -c -e -D Isabelle        (114 theories)
+Finished Marabou_Verification (0:02:58 elapsed time, 0:14:20 cpu time, factor 4.84)
+0:03:02 elapsed time, 0:14:20 cpu time, factor 4.72     exit 0
+
+8 exported SML checker tests passed
+72 exported SML proof-tree tests passed
+11 exported SML assignment tests passed
+16 exported SML inequality auxiliary tests passed      (all exit 0)
+
+$ python3 -m unittest discover -s Isabelle/tests -p 'test_*.py'
+Ran 312 tests in 4.058s
+OK
+```
+
+The `build_log` Error/Warning filter was empty, and no forbidden proof or
+axiom token occurs in any project theory. All 696 local links in 41 Markdown files resolve and `git diff --check` is
+clean. The upstream checkouts are clean at their pinned revisions.
+[PROJECT_THEORY_INVENTORY.md](PROJECT_THEORY_INVENTORY.md) lists the 37
+theories added after the audit snapshot.
+
+### Assurance
+
+The split theorems are about an exact abstraction of the native split, not
+the C++ code. `solve_one_split_unsat` and
+`preprocess_split_file_unsatisfiable_by_native_split` rely only on the HOL
+kernel. Kernel-checked evaluation of the executable solver is limited to
+small tableaux by the closure-based state; that is recorded as a finding.

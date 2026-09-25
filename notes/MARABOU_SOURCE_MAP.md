@@ -162,6 +162,28 @@ Inspected for [TABLEAU_BOUND_UPDATE.md](TABLEAU_BOUND_UPDATE.md); all in
   coefficient of at least 0.01. It subtracts or adds 10⁻⁶ and throws on a
   crossing.
 
+## Native ReLU split details that affect the model
+
+Inspected for [TABLEAU_RELU_SPLIT.md](TABLEAU_RELU_SPLIT.md).
+
+* `ReluConstraint::transformToUseAuxVariables` (ReluConstraint.cpp 936–978)
+  adds `f − b − aux = 0`, `aux ≥ 0` and `aux ≤ −lb(b)` (0 if `lb(b) > 0`).
+  From then on `getActiveSplit` (683–705) is bound-only (`b ≥ 0`,
+  `aux ≤ 0`); `getInactiveSplit` (674–681) is `b ≤ 0`, `f ≤ 0`.
+* `getCaseSplits` (597–641) puts the active split first when the direction
+  heuristic says so, or when `f`'s assignment is positive; otherwise the
+  inactive split comes first.
+* `getEntailedTightenings` (827–916) always proposes `f ≥ 0` and, with the
+  auxiliary in use, `aux ≥ 0`.
+* `SearchTreeHandler::performSplit` (SearchTreeHandler.cpp 133–225) obtains
+  the splits and disables the constraint. It stores the engine state
+  (bounds only) and pushes the context, then applies the first split,
+  asserting that it has no equations. The others are kept as alternatives
+  on the stack.
+* `Engine::solve` calls `explicitBasisBoundTightening` (Engine.cpp 287–296,
+  2269–2294) at the top of each native main-loop iteration, so row
+  tightening follows every split.
+
 ## Existing proof evidence is not exact checking
 
 `Checker::checkContradiction` uses `double` row combinations and

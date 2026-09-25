@@ -20,6 +20,8 @@ session Marabou_Verification = HOL +
     Imported_Marabou_Initial_Bases
     Tableau_Bound_Update
     Tableau_Bound_Update_Examples
+    Tableau_Relu_Split
+    Tableau_Relu_Split_Examples
     Inequality_Auxiliary
     ReLU_Splitting
     Marabou_Examples

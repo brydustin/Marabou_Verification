@@ -630,7 +630,7 @@ Results: `imported_source_term_order`, `imported_steps_match_query`, `imported_c
 
 ## Theories added after the audit snapshot
 
-The sections above are the audit-time snapshot of 77 theories. The following 35 theories were added later, in session order; the entries are extracted from their sources in the same format.
+The sections above are the audit-time snapshot of 77 theories. The following 37 theories were added later, in session order; the entries are extracted from their sources in the same format.
 
 ### [Tableau_State](../Isabelle/Tableau_State.thy)
 
@@ -735,6 +735,22 @@ Imports: Tableau_Bound_Update Tableau_Pivot_Examples Imported_Marabou_Example_Li
 Objects: `row_refutation`, `split_root`, `decided`, `decided_twice`.
 
 Results: `linear_unsat_row_conflict`, `linear_unsat_file_unsatisfiable_by_bounds`, `root_solution_below_split`, `split_not_entailed`, `decision_keeps_branch`, `split_as_derived_breaks_branch`, `decision_effects`, `second_decision_conflict`, `branch_refuted_not_root`, `weaker_proposal_is_noop`, `basic_tightening_status`.
+
+### [Tableau_Relu_Split](../Isabelle/Tableau_Relu_Split.thy)
+
+Imports: Tableau_Bound_Update.
+
+Objects: `aux_relu`, `relu_holds`, `relu_solutions`, `aux_form`, `split_bounds`, `native_inactive_split`, `native_active_split`, `case_splits`, `relu_branch_of`, `relu_entailed`, `apply_split`, `targets_in`, `branch_ok`, `all_row_rules`, `tighten_rows`, `refuted_after_rows`, `branch_refuted`, `split_refutes`, `aux_pattern`, `relu_in_aux_form`, `solve_one_split`.
+
+Results: `case_splits_set`, `decision_models_append`, `decision_models_splits`, `relu_split_covers`, `zero_boundary_in_both`, `relu_split_refutes`, `relu_nonneg`, `children_imply_relu`, `branch_of_relu`, `apply_relu_derived_branch`, `apply_decision_relu_branch`, `relu_nonneg_entailed`, `apply_split_decisions`, `apply_split_structure`, `apply_split_relu_branch`, `apply_split_branch`, `root_branch_ok`, `tighten_ok`, `apply_split_ok`, `entailed_relu_entailed`, `apply_rules_preserves`, `refuted_after_rows_sound`, `branch_refuted_sound`, `split_refutes_sound`, `branch_feasible_solution`, `eval_aux_pattern`, `relu_in_aux_form_aux`, `relu_root_empty_unsat`, `root_split_children_unsat`, `solve_one_split_unsat`.
+
+### [Tableau_Relu_Split_Examples](../Isabelle/Tableau_Relu_Split_Examples.thy)
+
+Imports: Tableau_Relu_Split Imported_Marabou_Example_Preprocess_Split_Unsat.
+
+Objects: `split_relu`, `split_query`, `file_query`, `sat_relu_query`, `no_aux_query`.
+
+Results: `split_query_solved`, `split_query_unsatisfiable`, `file_query_ready`, `file_query_solutions`, `file_query_children_empty`, `preprocess_split_file_unsatisfiable_by_native_split`, `split_needs_aux_equation`, `zero_point_in_both_children`, `split_boundaries`, `sat_relu_query_satisfiable`.
 
 ### [ReLU_Phase_Fixing](../Isabelle/ReLU_Phase_Fixing.thy)
 

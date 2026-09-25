@@ -128,6 +128,8 @@ interfaces, execution instructions, and assurance boundary.
 | [Tableau_Initialization_Examples.thy](Isabelle/Tableau_Initialization_Examples.thy) | `examples/linear_unsat.mqx` refuted by the HOL simplex alone, a SAT query, a ReLU query refuted by its linear part, a relaxation that is not a model, and refused inputs. |
 | [Tableau_Bound_Update.thy](Isabelle/Tableau_Bound_Update.thy) | Native bound application (`setLowerBound`/`tightenLowerBound` and upper, the tableau's compliance update, pending propagation, first-conflict recording) and exact row-derived bounds. A stronger bound is conjunction, a weaker one a no-op, and a recorded conflict has no solution. Derived bounds keep a branch; split bounds must be recorded as decisions, and a conflict refutes only its branch. |
 | [Tableau_Bound_Update_Examples.thy](Isabelle/Tableau_Bound_Update_Examples.thy) | `examples/linear_unsat.mqx` refuted by a root row-bound conflict, a split decision and its effects, a split applied as if derived breaking the branch, and a branch-only refutation. |
+| [Tableau_Relu_Split.thy](Isabelle/Tableau_Relu_Split.thy) | Marabou's auxiliary-form ReLU split (`b ≤ 0, f ≤ 0` or `b ≥ 0, aux ≤ 0`) as decisions on the branch state: the children cover the parent including the zero boundary and are exact, so refuting both refutes the parent. Row tightening and the simplex refute branches; `solve_one_split` is an executable split expansion with a query-level soundness theorem. |
+| [Tableau_Relu_Split_Examples.thy](Isabelle/Tableau_Relu_Split_Examples.thy) | A query that needs a split refuted by `solve_one_split`; `examples/preprocess_split_unsat.mqx` refuted through the native split; why the auxiliary equation is necessary. |
 | [Rational_Tableau_Auxiliary.thy](Isabelle/Rational_Tableau_Auxiliary.thy) | Executable index/equality/freshness checks, a proved embedding into the real transformation, and `check_after_fixed_aux_sound`. |
 | [Tableau_Auxiliary_Examples.thy](Isabelle/Tableau_Auxiliary_Examples.thy) | Exact connection to the earlier linear solver snapshot, a source-query UNSAT theorem, affine examples, and rejection of unsound variable reuse. |
 | [Tableau_Auxiliary_Sequence.thy](Isabelle/Tableau_Auxiliary_Sequence.thy) | Finite checked introductions, concatenation/failure laws, SAT/UNSAT preservation, and `check_after_fixed_aux_sequence_sound`. |
@@ -509,8 +511,17 @@ exported SML checks passed.
 [Bound application](notes/TABLEAU_BOUND_UPDATE.md) models how Marabou applies
 a new bound, derives bounds from a row and records a conflict. It separates
 branch decisions from derived facts, and refutes `examples/linear_unsat.mqx`
-a third way, by a root bound conflict as Marabou's own run did. The session
-has 112 theories; 312 Python tests and 107 exported SML checks pass.
+a third way, by a root bound conflict as Marabou's own run did. That
+milestone had 112 theories; 312 Python tests and 107 exported SML checks
+passed.
+
+[The native ReLU split](notes/TABLEAU_RELU_SPLIT.md) models Marabou's
+auxiliary-form case split as decisions on that state and proves that
+refuting both children refutes the parent. It refutes
+`examples/preprocess_split_unsat.mqx`, which needs a split, through the
+native split. It also records that kernel-checked evaluation of the solver
+state does not scale to that file. The session has 114 theories; 312 Python
+tests and 107 exported SML checks pass.
 
 ## Connection to source and remaining scope
 
@@ -551,6 +562,7 @@ open questions are recorded in:
 * [TABLEAU_PIVOT.md](notes/TABLEAU_PIVOT.md): exact pivots, the zero-tolerance Harris ratio test, native index arrays, the simplex failure theorem and a fuelled sound loop.
 * [TABLEAU_INITIALIZATION.md](notes/TABLEAU_INITIALIZATION.md): the starting tableau of a query, query-level SAT/UNSAT results, the native initial basis reproduced on 20 runs, and findings.
 * [TABLEAU_BOUND_UPDATE.md](notes/TABLEAU_BOUND_UPDATE.md): bound application, pending propagation, local conflicts, row-derived bounds, and branches with decisions.
+* [TABLEAU_RELU_SPLIT.md](notes/TABLEAU_RELU_SPLIT.md): the native auxiliary-form ReLU split, coverage and exactness, one split expansion, and the evaluation-cost finding.
 * [CONTINUATION_LOG.md](notes/CONTINUATION_LOG.md): the persistent per-invocation working record.
 * [ACTIVATION_REUSE.md](notes/ACTIVATION_REUSE.md): UAT's existing polymorphic `Sigmoid_Definition.sigmoid`, recorded for future real sigmoid semantics without duplicating its definition.
 * [RELUPLEX_MARABOU_LINEAGE.md](notes/RELUPLEX_MARABOU_LINEAGE.md): historical comparison, with Marabou as the verification target.
@@ -585,14 +597,17 @@ preprocessing. What remains outside the checked pipeline is described in
 
 The solver calculus now runs from a query to a result
 ([TABLEAU_INITIALIZATION.md](notes/TABLEAU_INITIALIZATION.md)). It applies
-bounds and records conflicts on branches whose decisions are tracked
-([TABLEAU_BOUND_UPDATE.md](notes/TABLEAU_BOUND_UPDATE.md)). The next targets
-are the audit's milestones 4 and 5:
-* Marabou's auxiliary-form ReLU splits as pairs of decisions on this state;
-* one search frame whose two refuted children close it, with bounds
-  restored on backtracking.
+bounds on branches with tracked decisions
+([TABLEAU_BOUND_UPDATE.md](notes/TABLEAU_BOUND_UPDATE.md)) and performs one
+native ReLU split ([TABLEAU_RELU_SPLIT.md](notes/TABLEAU_RELU_SPLIT.md)).
+Two next targets:
+* **Search (the audit's milestone 5):** a search stack whose frames close
+  when both children are refuted, with bounds restored on backtracking and
+  nested splits.
+* **Evaluation:** a first-order state (finite association lists for rows,
+  bounds and values) so that kernel-checked evaluation scales to real
+  files.
 
-Together they would let the HOL solver refute queries that need case splits.
 These remain exact real-arithmetic models; factorization and floating point
 stay outside the theorems. See
 [the project-direction audit](notes/PROJECT_DIRECTION_AUDIT.md).

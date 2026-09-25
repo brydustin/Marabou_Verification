@@ -438,3 +438,24 @@ Next (audit milestones 4 and 5): native auxiliary-form ReLU splits as pairs
 of decisions on this state, then one search frame closed by two refuted
 children, with bounds restored. At the user's request, milestone 27 was
 then committed and pushed as its own commit.
+
+2026-09-24. The user asked for the ReLU split milestone (audit milestone 4).
+
+Milestone 28 complete:
+* `Tableau_Relu_Split`: the native auxiliary-form split as decisions;
+  coverage (including the zero boundary) and exactness; ReLU-aware branches;
+  refutation by conflict, row tightening or simplex; one executable split
+  expansion with query-level soundness;
+* `Tableau_Relu_Split_Examples`: a split-needing query solved by
+  `code_simp`, and `preprocess_split_unsat.mqx` refuted through the native
+  split, with its children refuted by `linarith`.
+
+Finding: `code_simp` evaluation of the closure-based solver state grows
+about threefold per simplex step on the 14-column file tableau. Decoding
+costs about 24 s per occurrence. A first-order state (association lists) is
+the fix, recorded as a candidate milestone. See
+[TABLEAU_RELU_SPLIT.md](TABLEAU_RELU_SPLIT.md).
+
+Next: the audit's milestone 5 (search stack, frame closing, restoration), or
+the first-order state for scalable kernel-checked evaluation. Milestone 28
+was then committed and pushed at the user's request.
