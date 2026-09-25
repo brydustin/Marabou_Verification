@@ -2984,3 +2984,90 @@ the C++ code. `solve_one_split_unsat` and
 `preprocess_split_file_unsatisfiable_by_native_split` rely only on the HOL
 kernel. Kernel-checked evaluation of the executable solver is limited to
 small tableaux by the closure-based state; that is recorded as a finding.
+
+## Twenty-ninth milestone: search with backtracking
+
+Completed on 2026-09-25. See [TABLEAU_SEARCH.md](TABLEAU_SEARCH.md). This
+is milestone 5 of the audit's solver-calculus roadmap, extended to the whole
+search stack and a fuelled main loop. It is pure HOL work: no harness,
+importer or fixture changed.
+
+### Work done
+
+* [Tableau_Search.thy](../Isabelle/Tableau_Search.thy):
+  * search frames and states, `perform_split` and `pop_split`;
+  * bound restoration onto the current basis (`restore_branch`,
+    `comply_all`);
+  * the fuelled loop (`search_step`, `search_loop`) with `pick_split`;
+  * sound branches through row tightening, split bounds and simplex runs
+    (`tighten_rows_sound`, `apply_split_sound`, `simplex_run_branch_sound`),
+    and `restore_branch_sound`;
+  * the coverage invariant (`perform_split_sound`, `pop_split_sound`,
+    `search_step_sound`, `search_loop_sound`);
+  * query-level soundness from Marabou's default basis and from the
+    auxiliary basis (`search_from_start_sound`, `solve_search_sat`,
+    `solve_search_unsat`, `solve_search_aux_basis_sat`,
+    `solve_search_aux_basis_unsat`), and an `export_code … checking SML`
+    check.
+* [Tableau_Search_Examples.thy](../Isabelle/Tableau_Search_Examples.thy):
+  * a query refuted after backtracking;
+  * a solution found after backtracking and proved to satisfy the query;
+  * a solution from the default basis;
+  * the unrestored alternative that loses a solution.
+* Code equations `exchange_rows_code`, `substitute_row_code`
+  ([Tableau_Pivot.thy](../Isabelle/Tableau_Pivot.thy)) and
+  `update_nonbasic_assignment_code`
+  ([Tableau_Assignment_Update.thy](../Isabelle/Tableau_Assignment_Update.thy)):
+  equivalent forms that do not copy the previous row or value function.
+* The `performSplit` line range was corrected to 133–230 (it had been cited
+  as 133–225).
+
+During development:
+* `?Br0` in an Isar abbreviation reads as `?Br` with index 0, so it clashed
+  with a later `?Br`. It was renamed.
+* `setup` is a keyword and cannot name a fact.
+* A kernel-checked search from the default basis took 68 s per iteration.
+  Profiling located the cost in row tightening and in functions that copied
+  their predecessor. Code equations removed the copying (282 s → 75 s for
+  one example). A nested two-ReLU search still did not finish in 30 minutes
+  and is documented as an ML trace instead. Tabulating rows did not help
+  and was not kept.
+* While stopping a timing run, a broad process kill was issued. Only this
+  session's Isabelle processes were running at that moment, and none were
+  affected; afterwards processes were stopped only after their session name
+  was checked.
+
+### Validation
+
+```text
+$ isabelle build -c -e -D Isabelle        (116 theories)
+Finished Marabou_Verification (0:06:27 elapsed time, 0:20:09 cpu time, factor 3.12)
+0:06:32 elapsed time, 0:20:09 cpu time, factor 3.08     exit 0
+
+8 exported SML checker tests passed
+72 exported SML proof-tree tests passed
+11 exported SML assignment tests passed
+16 exported SML inequality auxiliary tests passed      (all exit 0)
+
+$ python3 -m unittest discover -s Isabelle/tests -p 'test_*.py'
+Ran 312 tests in 6.748s
+OK
+```
+
+The `build_log` Error/Warning filter was empty, and no forbidden proof or
+axiom token occurs in any project theory. All 716 local links in 42 Markdown
+files resolve and `git diff --check` is clean. The upstream checkouts are
+clean at their pinned revisions.
+[PROJECT_THEORY_INVENTORY.md](PROJECT_THEORY_INVENTORY.md) lists the 39
+theories added after the audit snapshot.
+
+The session's wall time grew from about 3 to about 6.5 minutes, mostly
+because of the two kernel-checked backtracking searches.
+
+### Assurance
+
+The search theorems are about an exact abstraction of the native search in
+one configuration, not the C++ code. `split_query_unsatisfiable_by_search`
+and `backtrack_sat_query_solution` rely only on the HOL kernel, including
+the new code equations, which are proved. Termination and completeness are
+not claimed; `Search_Unknown` claims nothing.

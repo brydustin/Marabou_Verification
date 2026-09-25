@@ -24,7 +24,7 @@ Pinned revision `1c2f4788c32e2f4e407c356b763a8025c5578722`, `src/engine/`:
 | `getActiveSplit` with the auxiliary in use: `b ≥ 0`, `aux ≤ 0` | 683–705 | `native_active_split` |
 | `getCaseSplits`: order by the sign of `f`'s assignment when no direction is set | 597–641 | `case_splits` |
 | `getEntailedTightenings`: always `f ≥ 0`, `aux ≥ 0` | 827–916 | `relu_nonneg_entailed` |
-| `SearchTreeHandler::performSplit`: disable the constraint, store the state, apply the first split (no equations allowed), keep the rest | SearchTreeHandler.cpp 133–225 | `apply_split`, `split_refutes` |
+| `SearchTreeHandler::performSplit`: disable the constraint, store the state, apply the first split (no equations allowed), keep the rest | SearchTreeHandler.cpp 133–230 | `apply_split`, `split_refutes` |
 | `Engine::applySplit`, bound-only path | Engine.cpp 1994–2141 | `apply_decision` for each bound |
 | `Engine::explicitBasisBoundTightening` at the top of each main-loop iteration: the row tightener over the basic rows | Engine.cpp 287–296, 2269–2294 | `tighten_rows` |
 
@@ -92,6 +92,11 @@ first-order state: finite association lists for rows, bounds and values,
 with refinement lemmas to the present state. Alternatively, a native trace
 could be checked instead of recomputed. Either is a separate milestone; no
 theorem here depends on it.
+
+[Milestone 29](TABLEAU_SEARCH.md#finding-evaluation-cost) traced the growth
+per step to row and value functions that mentioned their predecessor
+several times. It added equivalent code equations that mention it once,
+which cut the `solve_one_split` example above from 28 s to 9 s.
 
 ## Limits
 

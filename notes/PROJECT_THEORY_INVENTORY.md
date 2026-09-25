@@ -630,7 +630,7 @@ Results: `imported_source_term_order`, `imported_steps_match_query`, `imported_c
 
 ## Theories added after the audit snapshot
 
-The sections above are the audit-time snapshot of 77 theories. The following 37 theories were added later, in session order; the entries are extracted from their sources in the same format.
+The sections above are the audit-time snapshot of 77 theories. The following 39 theories were added later, in session order; the entries are extracted from their sources in the same format.
 
 ### [Tableau_State](../Isabelle/Tableau_State.thy)
 
@@ -646,7 +646,7 @@ Imports: Tableau_State.
 
 Objects: `linexpr_coefficient`, `update_nonbasic_assignment`.
 
-Results: `eval_terms_update`, `eval_linexpr_update`, `update_nonbasic_preserves_rows`, `update_nonbasic_preserves_well_formed`, `update_nonbasic_preserves_bounds`, `update_nonbasic_candidate_satisfies_rows`.
+Results: `eval_terms_update`, `eval_linexpr_update`, `update_nonbasic_preserves_rows`, `update_nonbasic_preserves_well_formed`, `update_nonbasic_preserves_bounds`, `update_nonbasic_candidate_satisfies_rows`, `update_nonbasic_assignment_code`.
 
 ### [Tableau_Pivot](../Isabelle/Tableau_Pivot.thy)
 
@@ -654,7 +654,7 @@ Imports: Tableau_Assignment_Update.
 
 Objects: `row_terms`, `row_const`, `row_coefficient`, `drop_var`, `scale_terms`, `solve_row`, `substitute_row`, `exchange_rows`, `exchange_basis`, `pivot_admissible`, `tableau_rows_supported`, `tableau_represents`, `tableau_bounded_models`, `pivot_and_set`.
 
-Results: `eval_linexpr_parts`, `linexpr_vars_parts`, `eval_terms_drop_var`, `eval_terms_scale_terms`, `coefficient_drop_var_same`, `coefficient_drop_var_other`, `coefficient_scale_terms`, `coefficient_append`, `coefficient_absent`, `vars_drop_var`, `vars_scale_terms`, `eval_row_split`, `eval_solve_row`, `solve_row_iff`, `eval_substitute_row`, `vars_solve_row`, `vars_substitute_row`, `coefficient_solve_row_leaving`, `well_formed_rows_supported`, `exchange_basis_simps`, `pivot_admissible_facts`, `exchange_carrier`, `exchange_models`, `exchange_rows_supported`, `exchange_well_formed`, `exchange_candidate`, `exchange_nonbasic_bounds`, `candidate_row_eval`, `rows_satisfied_iff_candidate`, `exchange_rows_satisfied`, `exchange_pivot_element`, `exchange_back_admissible`, `solved_rows_unique`, `exchange_back_rows`, `exchange_represents`, `basis_determines_rows`, `exchange_bounded_models`, `pivot_and_set_sound`.
+Results: `eval_linexpr_parts`, `linexpr_vars_parts`, `eval_terms_drop_var`, `eval_terms_scale_terms`, `coefficient_drop_var_same`, `coefficient_drop_var_other`, `coefficient_scale_terms`, `coefficient_append`, `coefficient_absent`, `vars_drop_var`, `vars_scale_terms`, `eval_row_split`, `eval_solve_row`, `solve_row_iff`, `eval_substitute_row`, `vars_solve_row`, `vars_substitute_row`, `coefficient_solve_row_leaving`, `exchange_rows_code`, `substitute_row_code`, `well_formed_rows_supported`, `exchange_basis_simps`, `pivot_admissible_facts`, `exchange_carrier`, `exchange_models`, `exchange_rows_supported`, `exchange_well_formed`, `exchange_candidate`, `exchange_nonbasic_bounds`, `candidate_row_eval`, `rows_satisfied_iff_candidate`, `exchange_rows_satisfied`, `exchange_pivot_element`, `exchange_back_admissible`, `solved_rows_unique`, `exchange_back_rows`, `exchange_represents`, `basis_determines_rows`, `exchange_bounded_models`, `pivot_and_set_sound`.
 
 ### [Tableau_Simplex_Step](../Isabelle/Tableau_Simplex_Step.thy)
 
@@ -751,6 +751,22 @@ Imports: Tableau_Relu_Split Imported_Marabou_Example_Preprocess_Split_Unsat.
 Objects: `split_relu`, `split_query`, `file_query`, `sat_relu_query`, `no_aux_query`.
 
 Results: `split_query_solved`, `split_query_unsatisfiable`, `file_query_ready`, `file_query_solutions`, `file_query_children_empty`, `preprocess_split_file_unsatisfiable_by_native_split`, `split_needs_aux_equation`, `zero_point_in_both_children`, `split_boundaries`, `sat_relu_query_satisfiable`.
+
+### [Tableau_Search](../Isabelle/Tableau_Search.thy)
+
+Imports: Tableau_Relu_Split.
+
+Objects: `search_frame`, `search_state`, `with_tableau`, `comply_all`, `restore_branch`, `same_space`, `tableau_structure`, `branch_sound`, `frame_ok`, `perform_split`, `pop_split`, `pending_models`, `frames_ok`, `pick_split`, `step_outcome`, `search_step`, `search_result`, `search_loop`, `search_inv`, `relus_ok`, `initial_search`, `aux_candidates`, `query_aux_relus`, `search_start`, `solve_search`, `solve_search_aux_basis`, `solve_query_search`.
+
+Results: `comply_all_simps`, `comply_rows_satisfied`, `comply_all_rows_satisfied`, `comply_value_other`, `comply_both_within`, `comply_all_within`, `branch_sound_frame_ok`, `models_cong`, `bounded_models_space`, `conflict_cong`, `structure_invariant`, `complete_ordered`, `tighten_kept`, `apply_split_kept`, `apply_split_sound`, `apply_rules_kept`, `tighten_rows_sound`, `branch_sound_conflict`, `apply_choice_frame`, `simplex_run_frame`, `simplex_run_branch_sound`, `restore_branch_sound`, `pending_models_simps`, `frames_ok_simps`, `targets_in_space`, `pop_split_sound_all`, `pop_split_sound`, `perform_split_sound`, `pick_split_in`, `is_search_unsat_iff`, `is_search_sat_iff`, `initial_search_inv`, `relus_hold`, `search_step_sound`, `search_loop_sound_all`, `search_loop_sound`, `query_aux_relus_form`, `relus_root_empty_unsat`, `native_initial_carrier`, `search_start_facts`, `search_from_start_sound`, `native_search_start`, `aux_search_start`, `solve_search_sat`, `solve_search_unsat`, `solve_search_aux_basis_sat`, `solve_search_aux_basis_unsat`, `solve_query_search_sound`, `solve_search_verdicts`.
+
+### [Tableau_Search_Examples](../Isabelle/Tableau_Search_Examples.thy)
+
+Imports: Tableau_Search Tableau_Relu_Split_Examples.
+
+Objects: `backtrack_sat_query`, `sat_root`, `unrestored`, `missed_point`.
+
+Results: `split_query_search`, `split_query_unsatisfiable_by_search`, `backtrack_sat_search`, `backtrack_sat_query_solution`, `sat_relu_query_search`, `unrestored_keeps_child_bound`, `missed_point_facts`, `unrestored_alternative_breaks_branch`.
 
 ### [ReLU_Phase_Fixing](../Isabelle/ReLU_Phase_Fixing.thy)
 

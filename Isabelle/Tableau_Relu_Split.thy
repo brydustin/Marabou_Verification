@@ -12,7 +12,7 @@ text \<open>
     getActiveSplit (683-705) with the auxiliary in use is b \<ge> 0, aux \<le> 0;
   \<^item> ReluConstraint::getCaseSplits (597-641) orders them by the sign of f's
     assignment when no direction is set;
-  \<^item> SearchTreeHandler::performSplit (SearchTreeHandler.cpp:133-225)
+  \<^item> SearchTreeHandler::performSplit (SearchTreeHandler.cpp:133-230)
     disables the constraint, stores the state, applies the first split
     (asserting that it has no equations) and keeps the other as an
     alternative;

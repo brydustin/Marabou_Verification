@@ -175,7 +175,7 @@ Inspected for [TABLEAU_RELU_SPLIT.md](TABLEAU_RELU_SPLIT.md).
   inactive split comes first.
 * `getEntailedTightenings` (827–916) always proposes `f ≥ 0` and, with the
   auxiliary in use, `aux ≥ 0`.
-* `SearchTreeHandler::performSplit` (SearchTreeHandler.cpp 133–225) obtains
+* `SearchTreeHandler::performSplit` (SearchTreeHandler.cpp 133–230) obtains
   the splits and disables the constraint. It stores the engine state
   (bounds only) and pushes the context, then applies the first split,
   asserting that it has no equations. The others are kept as alternatives
@@ -183,6 +183,37 @@ Inspected for [TABLEAU_RELU_SPLIT.md](TABLEAU_RELU_SPLIT.md).
 * `Engine::solve` calls `explicitBasisBoundTightening` (Engine.cpp 287–296,
   2269–2294) at the top of each native main-loop iteration, so row
   tightening follows every split.
+
+## Native search details that affect the model
+
+Inspected for [TABLEAU_SEARCH.md](TABLEAU_SEARCH.md).
+
+* `SearchTreeHandler::performSplit` disables the split constraint *before*
+  storing the state, so the constraint stays disabled in both children and
+  becomes active again only when its frame is removed.
+* `Engine::preContextPushHook` (Engine.cpp 2546–2554) saves the local bounds
+  into context-dependent storage (`BoundManager::storeLocalBounds`,
+  BoundManager.cpp 223–230) before the context push. `_consistentBounds`
+  and the pending flags are context-dependent too, so a pop restores them.
+* `SearchTreeHandler::popSplit` (SearchTreeHandler.cpp 267–402) pops entries
+  without alternatives with a plain context pop. For the entry it resumes,
+  it pops the context and runs `Engine::postContextPopHook` (Engine.cpp
+  2556–2570). That hook restores the bounds (`restoreLocalBounds`, 232–239)
+  and moves each nonbasic into them
+  (`Tableau::updateVariablesToComplyWithBounds`, Tableau.cpp 1703–1717).
+  It then runs `Engine::restoreState` (1859–1892) and applies the next
+  alternative, looping while the bounds are inconsistent.
+* With `STORE_BOUNDS_ONLY`, `Tableau::storeState`/`restoreState` do nothing,
+  so the basis and assignment reached in a child are kept after
+  backtracking.
+* In `Engine::solve` (Engine.cpp 196–461), an `InfeasibleQueryException`
+  (from `allBoundsValid` or a failed simplex step) calls `popSplit`. A
+  `false` result, meaning the stack is exhausted, ends the run with UNSAT.
+* With the violation threshold at 1, `performConstraintFixingStep` (612–630)
+  reports the first violated active constraint
+  (`chooseViolatedConstraintForFixing`, SearchTreeHandler.cpp 544–576, with
+  `USE_LEAST_FIX = false`), which sets the split request. It then still
+  attempts a repair, so the split's child order is taken after that repair.
 
 ## Existing proof evidence is not exact checking
 

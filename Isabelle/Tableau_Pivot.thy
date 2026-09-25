@@ -145,6 +145,25 @@ definition exchange_rows ::
       else substitute_row e (solve_row b (R b) e) (R x))"
 
 text \<open>
+  Code equations for kernel-checked evaluation (code_simp), which also
+  normalizes under binders. As defined, exchange_rows and substitute_row
+  mention the old row several times, so every exchange would copy the
+  previous row function into the new one several times. These equivalent
+  forms mention it once.
+\<close>
+
+lemma exchange_rows_code [code]:
+  "exchange_rows R b e x = (let s = solve_row b (R b) e in if x = e then s else substitute_row e s (R x))"
+  by (simp add: exchange_rows_def Let_def)
+
+lemma substitute_row_code [code]:
+  "substitute_row e s r =
+     (case r of Linexpr c ts \<Rightarrow>
+        Linexpr (c + linexpr_coefficient ts e * row_const s)
+          (drop_var ts e @ scale_terms (linexpr_coefficient ts e) (row_terms s)))"
+  by (cases r) (simp add: substitute_row_def row_coefficient_def)
+
+text \<open>
   The value stores are indexed by variable, so the native array swap
   (Tableau.cpp:839-841, "values haven't changed") is a move between the two
   stores; the candidate valuation is unchanged (exchange_candidate).

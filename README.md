@@ -130,6 +130,8 @@ interfaces, execution instructions, and assurance boundary.
 | [Tableau_Bound_Update_Examples.thy](Isabelle/Tableau_Bound_Update_Examples.thy) | `examples/linear_unsat.mqx` refuted by a root row-bound conflict, a split decision and its effects, a split applied as if derived breaking the branch, and a branch-only refutation. |
 | [Tableau_Relu_Split.thy](Isabelle/Tableau_Relu_Split.thy) | Marabou's auxiliary-form ReLU split (`b ≤ 0, f ≤ 0` or `b ≥ 0, aux ≤ 0`) as decisions on the branch state: the children cover the parent including the zero boundary and are exact, so refuting both refutes the parent. Row tightening and the simplex refute branches; `solve_one_split` is an executable split expansion with a query-level soundness theorem. |
 | [Tableau_Relu_Split_Examples.thy](Isabelle/Tableau_Relu_Split_Examples.thy) | A query that needs a split refuted by `solve_one_split`; `examples/preprocess_split_unsat.mqx` refuted through the native split; why the auxiliary equation is necessary. |
+| [Tableau_Search.thy](Isabelle/Tableau_Search.thy) | Marabou's search stack (`performSplit`, `popSplit`, bound restoration onto the current basis) and a fuelled main loop in the `relu_split` capture's configuration. Invariant: sound branches and frames, and coverage of every ReLU-respecting solution by the current branch or a pending alternative. `Search_Sat v` satisfies the query and `Search_Unsat` proves it unsatisfiable, from Marabou's default basis or the auxiliary basis. |
+| [Tableau_Search_Examples.thy](Isabelle/Tableau_Search_Examples.thy) | Kernel-checked searches: a query refuted after backtracking, a solution found after backtracking, nested splits, and why the parent's bounds must be restored. |
 | [Rational_Tableau_Auxiliary.thy](Isabelle/Rational_Tableau_Auxiliary.thy) | Executable index/equality/freshness checks, a proved embedding into the real transformation, and `check_after_fixed_aux_sound`. |
 | [Tableau_Auxiliary_Examples.thy](Isabelle/Tableau_Auxiliary_Examples.thy) | Exact connection to the earlier linear solver snapshot, a source-query UNSAT theorem, affine examples, and rejection of unsound variable reuse. |
 | [Tableau_Auxiliary_Sequence.thy](Isabelle/Tableau_Auxiliary_Sequence.thy) | Finite checked introductions, concatenation/failure laws, SAT/UNSAT preservation, and `check_after_fixed_aux_sequence_sound`. |
@@ -520,8 +522,18 @@ auxiliary-form case split as decisions on that state and proves that
 refuting both children refutes the parent. It refutes
 `examples/preprocess_split_unsat.mqx`, which needs a split, through the
 native split. It also records that kernel-checked evaluation of the solver
-state does not scale to that file. The session has 114 theories; 312 Python
-tests and 107 exported SML checks pass.
+state does not scale to that file. That milestone had 114 theories; 312
+Python tests and 107 exported SML checks passed.
+
+[Search with backtracking](notes/TABLEAU_SEARCH.md) adds Marabou's search
+stack: splits pushed as frames, refuted branches popped, and the parent's
+bounds restored onto the current basis. A fuelled main loop runs from a
+query to `Search_Sat v`, which is proved to satisfy the query, or to
+`Search_Unsat`, which is proved to mean it is unsatisfiable. The invariant
+behind `Search_Unsat` is coverage: every ReLU-respecting solution lies in the
+current branch or a pending alternative. Kernel-checked searches refute a
+query and find a solution after backtracking. The session has 116 theories;
+312 Python tests and 107 exported SML checks pass.
 
 ## Connection to source and remaining scope
 
@@ -563,6 +575,7 @@ open questions are recorded in:
 * [TABLEAU_INITIALIZATION.md](notes/TABLEAU_INITIALIZATION.md): the starting tableau of a query, query-level SAT/UNSAT results, the native initial basis reproduced on 20 runs, and findings.
 * [TABLEAU_BOUND_UPDATE.md](notes/TABLEAU_BOUND_UPDATE.md): bound application, pending propagation, local conflicts, row-derived bounds, and branches with decisions.
 * [TABLEAU_RELU_SPLIT.md](notes/TABLEAU_RELU_SPLIT.md): the native auxiliary-form ReLU split, coverage and exactness, one split expansion, and the evaluation-cost finding.
+* [TABLEAU_SEARCH.md](notes/TABLEAU_SEARCH.md): the search stack, bound restoration, the fuelled main loop and its SAT/UNSAT soundness, kernel-checked searches, and the evaluation-cost finding with its code equations.
 * [CONTINUATION_LOG.md](notes/CONTINUATION_LOG.md): the persistent per-invocation working record.
 * [ACTIVATION_REUSE.md](notes/ACTIVATION_REUSE.md): UAT's existing polymorphic `Sigmoid_Definition.sigmoid`, recorded for future real sigmoid semantics without duplicating its definition.
 * [RELUPLEX_MARABOU_LINEAGE.md](notes/RELUPLEX_MARABOU_LINEAGE.md): historical comparison, with Marabou as the verification target.
@@ -595,18 +608,17 @@ The three checker extensions requested after milestone 20 are complete:
 preprocessing. What remains outside the checked pipeline is described in
 [NATIVE_PREPROCESSING.md](notes/NATIVE_PREPROCESSING.md#assurance-and-limits).
 
-The solver calculus now runs from a query to a result
-([TABLEAU_INITIALIZATION.md](notes/TABLEAU_INITIALIZATION.md)). It applies
-bounds on branches with tracked decisions
-([TABLEAU_BOUND_UPDATE.md](notes/TABLEAU_BOUND_UPDATE.md)) and performs one
-native ReLU split ([TABLEAU_RELU_SPLIT.md](notes/TABLEAU_RELU_SPLIT.md)).
-Two next targets:
-* **Search (the audit's milestone 5):** a search stack whose frames close
-  when both children are refuted, with bounds restored on backtracking and
-  nested splits.
-* **Evaluation:** a first-order state (finite association lists for rows,
-  bounds and values) so that kernel-checked evaluation scales to real
-  files.
+The solver calculus now runs from a query to a proved result
+([TABLEAU_SEARCH.md](notes/TABLEAU_SEARCH.md)). Its main theorem is SAT and
+UNSAT soundness of the fuelled search in the `relu_split` capture's
+configuration. Two next targets:
+* **Evaluation:** a first-order state (finite lists for rows, bounds and
+  values), with refinement lemmas to the present state. That would let the
+  kernel run the search on real files; today even a two-ReLU search takes
+  more than 30 minutes.
+* **Fidelity:** ReLU repair (`fixViolatedPlConstraintIfPossible`) and valid
+  case splits (ReLUs whose phase their bounds fix) during search. Those are
+  the main parts of the modeled configuration's main loop still missing.
 
 These remain exact real-arithmetic models; factorization and floating point
 stay outside the theorems. See

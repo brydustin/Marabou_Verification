@@ -459,3 +459,28 @@ the fix, recorded as a candidate milestone. See
 Next: the audit's milestone 5 (search stack, frame closing, restoration), or
 the first-order state for scalable kernel-checked evaluation. Milestone 28
 was then committed and pushed at the user's request.
+
+2026-09-25. The user asked to continue the project and how close it is to
+finished.
+
+Milestone 29 complete:
+* `Tableau_Search`: Marabou's search stack (`performSplit`, `popSplit`,
+  bound restoration onto the current basis) and a fuelled main loop in the
+  `relu_split` capture's configuration. The invariant is sound branches and
+  frames plus coverage. `Search_Sat v` is proved to satisfy the query and
+  `Search_Unsat` to mean it is unsatisfiable, from Marabou's default basis or
+  the auxiliary basis.
+* `Tableau_Search_Examples`: kernel-checked searches that refute a query and
+  find a solution after backtracking; the unrestored alternative that loses
+  a solution.
+* Code equations in `Tableau_Pivot` and `Tableau_Assignment_Update` stop
+  pivots and assignment updates from copying their predecessor under
+  `code_simp`. They speed up earlier examples too.
+
+Finding: even so, a two-ReLU search did not finish in 30 minutes under
+`code_simp`; the cost now grows with every applied bound. See
+[TABLEAU_SEARCH.md](TABLEAU_SEARCH.md#finding-evaluation-cost).
+
+Next: a first-order state for kernel-checked evaluation of real files, or
+ReLU repair and valid case splits for fidelity to the modeled configuration.
+Milestone 29 was then committed and pushed at the user's request.

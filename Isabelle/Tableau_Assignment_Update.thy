@@ -80,4 +80,19 @@ theorem update_nonbasic_candidate_satisfies_rows:
      (auto intro: update_nonbasic_preserves_well_formed[OF wf]
        update_nonbasic_preserves_rows[OF x rows])
 
+text \<open>
+  A code equation for kernel-checked evaluation (code_simp), which also
+  normalizes under binders: the old basic values are mentioned once, so
+  repeated updates do not copy them into both branches of a conditional.
+\<close>
+
+lemma update_nonbasic_assignment_code [code]:
+  "update_nonbasic_assignment S x r =
+     (let d = r - tableau_nonbasic_value S x; bv = tableau_basic_value S; B = tableau_basics S;
+          R = tableau_rows S in
+      S\<lparr>tableau_nonbasic_value := (tableau_nonbasic_value S)(x := r),
+        tableau_basic_value := (\<lambda>b. bv b +
+          (if b \<in> B then linexpr_coefficient (case R b of Linexpr c ts \<Rightarrow> ts) x * d else 0))\<rparr>)"
+  by (simp add: update_nonbasic_assignment_def Let_def fun_eq_iff)
+
 end

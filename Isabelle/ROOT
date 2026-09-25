@@ -22,6 +22,8 @@ session Marabou_Verification = HOL +
     Tableau_Bound_Update_Examples
     Tableau_Relu_Split
     Tableau_Relu_Split_Examples
+    Tableau_Search
+    Tableau_Search_Examples
     Inequality_Auxiliary
     ReLU_Splitting
     Marabou_Examples
